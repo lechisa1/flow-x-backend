@@ -1,0 +1,3 @@
+#to seed data use command below
+
+# npx prisma db seed

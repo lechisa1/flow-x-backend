@@ -1,0 +1,1013 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// 1. USER MANAGEMENT MODULE
+// =====================================================
+
+model User {
+  user_id         Int       @id @default(autoincrement())
+  full_name       String    @db.VarChar(100)
+  email           String    @unique @db.VarChar(100)
+  password        String    @db.Text
+  phone           String?   @db.VarChar(20)
+  profile_pic_url String?   @db.Text
+  is_active       Boolean   @default(true)
+  last_login      DateTime? @db.Timestamp(6)
+  deleted_at      DateTime? @db.Timestamp(6)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  assigned_roles           UserRole[]
+  sessions                 UserSession[]
+  activation_logs          UserActivationLog[]
+  presence                 UserPresence?
+  devices                  UserDevice[]
+  assigned_positions       UserAssignment[]
+  sent_messages            Message[]                 @relation("SenderMessages")
+  received_tasks           Task[]                    @relation("AssignedTasks")
+  created_tasks            Task[]                    @relation("CreatedTasks")
+  task_assignments         TaskAssignment[]
+  task_updates             TaskUpdate[]
+  task_feedback            TaskFeedback[]
+  uploaded_files           File[]                    @relation("UploadedFiles")
+  published_notices        Notice[]                  @relation("PublishedNotices")
+  forum_topics             ForumTopic[]
+  forum_comments           ForumComment[]
+  topic_likes              TopicLike[]
+  uploaded_resources       Resource[]                @relation("UploadedResources")
+  dashboard_configs        UserDashboard[]
+  report_requests          ReportRequest[]
+  system_logs              SystemUsageLog[]
+  audit_logs               AuditLog[]
+  education                UserEducation[]
+  experience               UserExperience[]
+  skills                   UserSkill[]
+  conversations            Conversation[]                     @relation("InitiatedConversations")
+  conversation_user_links  Conversation[]                     @relation("ConversationUser")
+  conversationParticipants ConversationParticipant[]
+  messageReads             MessageRead[]
+  messageReactions         MessageReaction[]
+  pinnedConversations      PinnedConversation[]
+  noticeViews              NoticeView[]
+  resourceAccessLogs       ResourceAccessLog[]
+  assigned_task_assignments TaskAssignment[] @relation("TaskAssigner")
+  passwordResetTokens       PasswordResetToken[] @relation("PasswordResetTokens")
+  passwordHistory           PasswordHistory[]
+  role_assignments          UserRole[] @relation("UserRolesAssigned")
+
+  @@map("users")
+}
+
+model Role {
+  role_id     Int      @id @default(autoincrement())
+  role_name   String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user_roles    UserRole[]
+  permissions   RolePermission[]
+  noticeTargets NoticeTarget[]
+
+  @@map("roles")
+}
+
+model Permission {
+  permission_id   Int     @id @default(autoincrement())
+  permission_name String  @unique @db.VarChar(100)
+  resource        String? @db.VarChar(100)
+  action          String? @db.VarChar(50)
+  description     String? @db.Text
+
+  // Relations
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  user_role_id Int      @id @default(autoincrement())
+  user_id      Int
+  role_id      Int
+  assigned_by  Int?
+  assigned_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user    User  @relation(fields: [user_id], references: [user_id])
+  role    Role  @relation(fields: [role_id], references: [role_id])
+  assigner User? @relation("UserRolesAssigned", fields: [assigned_by], references: [user_id])
+
+  @@unique([user_id, role_id])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  rp_id         Int @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+
+  // Relations
+  role       Role       @relation(fields: [role_id], references: [role_id])
+  permission Permission @relation(fields: [permission_id], references: [permission_id])
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model UserSession {
+  session_id  Int      @id @default(autoincrement())
+  user_id     Int
+  token       String   @db.Text
+  device_info String?  @db.Text
+  ip_address  String?  @db.VarChar(45)
+  expires_at  DateTime @db.Timestamp(6)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_sessions")
+}
+
+model UserActivationLog {
+  log_id       Int      @id @default(autoincrement())
+  user_id      Int
+  action       String   @db.VarChar(20)
+  performed_by Int?
+  reason       String?  @db.Text
+  timestamp    DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_activation_logs")
+}
+
+model UserPresence {
+  presence_id     Int      @id @default(autoincrement())
+  user_id         Int      @unique
+  presence_status String?  @db.VarChar(20)
+  last_seen       DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_presence")
+}
+
+model UserDevice {
+  device_id    Int      @id @default(autoincrement())
+  user_id      Int
+  device_token String   @db.Text
+  platform     String?  @db.VarChar(20)
+  device_name  String?  @db.VarChar(100)
+  last_active  DateTime @default(now()) @db.Timestamp(6)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_devices")
+}
+
+// =====================================================
+// 2. ORGANIZATIONAL STRUCTURE
+// =====================================================
+
+model OrganizationalStructure {
+  org_node_id    Int      @id @default(autoincrement())
+  node_name      String   @db.VarChar(100)
+  node_type      String   @db.VarChar(50)
+  parent_node_id Int?
+  parent         OrganizationalStructure? @relation("OrgNodeParent", fields: [parent_node_id], references: [org_node_id])
+  children       OrganizationalStructure[] @relation("OrgNodeParent")
+  level          Int      @default(0)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user_assignments UserAssignment[]
+  conversations    Conversation[]
+  forum_topics     ForumTopic[]
+  resources        Resource[]
+  noticeTargets    NoticeTarget[]
+
+  @@map("organizational_structure")
+}
+
+model OrganizationPosition {
+  position_id    Int      @id @default(autoincrement())
+  position_name  String   @unique @db.VarChar(100)
+  description    String?  @db.Text
+  hierarchy_rank Int?
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user_assignments UserAssignment[]
+
+  @@map("organization_positions")
+}
+
+model UserAssignment {
+  assignment_id Int      @id @default(autoincrement())
+  user_id       Int
+  org_node_id   Int
+  position_id   Int
+  is_primary    Boolean  @default(false)
+  is_node_head  Boolean  @default(false)
+  assigned_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user     User                    @relation(fields: [user_id], references: [user_id])
+  org_node OrganizationalStructure @relation(fields: [org_node_id], references: [org_node_id])
+  position OrganizationPosition    @relation(fields: [position_id], references: [position_id])
+
+  @@unique([user_id, org_node_id])
+  @@map("user_assignments")
+}
+
+// =====================================================
+// 3. BASE DATA MANAGEMENT
+// =====================================================
+
+model TaskType {
+  task_type_id Int     @id @default(autoincrement())
+  type_name    String  @unique @db.VarChar(50)
+  description  String? @db.Text
+  is_active    Boolean @default(true)
+
+  // Relations
+  tasks Task[]
+
+  @@map("task_types")
+}
+
+model Priority {
+  priority_id       Int     @id @default(autoincrement())
+  priority_level    String  @unique @db.VarChar(20)
+  color_code        String? @db.VarChar(7)
+  response_time_hrs Int?
+  sort_order        Int?
+
+  // Relations
+  tasks Task[]
+
+  @@map("priorities")
+}
+
+model Status {
+  status_id   Int     @id @default(autoincrement())
+  status_name String  @unique @db.VarChar(50)
+  category    String? @db.VarChar(30)
+  is_active   Boolean @default(true)
+
+  // Relations
+  tasks   Task[]
+  notices Notice[]
+
+  @@map("statuses")
+}
+
+model LookupCategory {
+  category_id   Int     @id @default(autoincrement())
+  category_name String  @unique @db.VarChar(50)
+  description   String? @db.Text
+
+  // Relations
+  lookup_values LookupValue[]
+
+  @@map("lookup_categories")
+}
+
+model LookupValue {
+  value_id    Int     @id @default(autoincrement())
+  category_id Int
+  value_name  String  @db.VarChar(100)
+  sort_order  Int     @default(0)
+  is_active   Boolean @default(true)
+
+  // Relations
+  category LookupCategory @relation(fields: [category_id], references: [category_id])
+
+  @@unique([category_id, value_name])
+  @@map("lookup_values")
+}
+
+// =====================================================
+// 4. COMMUNICATION MODULE
+// =====================================================
+
+model ConversationType {
+  conversation_type_id Int     @id @default(autoincrement())
+  type_name            String  @unique @db.VarChar(50)
+  description          String? @db.Text
+
+  // Relations
+  conversations Conversation[]
+
+  @@map("conversation_types")
+}
+
+model Conversation {
+  conversation_id      Int      @id @default(autoincrement())
+  title                String   @db.VarChar(200)
+  initiator_user_id    Int
+  org_node_id          Int?
+  conversation_type_id Int
+  is_active            Boolean  @default(true)
+  created_at           DateTime @default(now()) @db.Timestamp(6)
+  updated_at           DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  initiator         User                      @relation("InitiatedConversations", fields: [initiator_user_id], references: [user_id])
+  org_node          OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
+  conversation_type ConversationType          @relation(fields: [conversation_type_id], references: [conversation_type_id])
+  participants      ConversationParticipant[]
+  messages          Message[]
+  pinned_by_users   PinnedConversation[]
+  tasks             Task[]
+   user              User?                     @relation("ConversationUser", fields: [userUser_id], references: [user_id])
+   userUser_id       Int?
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  participant_id  Int       @id @default(autoincrement())
+  conversation_id Int
+  user_id         Int
+  last_read_at    DateTime? @db.Timestamp(6)
+  joined_at       DateTime  @default(now()) @db.Timestamp(6)
+
+  // Relations
+  conversation Conversation @relation(fields: [conversation_id], references: [conversation_id])
+  user         User         @relation(fields: [user_id], references: [user_id])
+
+  @@unique([conversation_id, user_id])
+  @@map("conversation_participants")
+}
+
+model Message {
+  message_id        Int       @id @default(autoincrement())
+  conversation_id   Int
+  sender_user_id    Int
+  parent_message_id Int?
+  content_text      String    @db.Text
+  is_edited         Boolean   @default(false)
+  deleted_at        DateTime? @db.Timestamp(6)
+  sent_at           DateTime  @default(now()) @db.Timestamp(6)
+
+  // Relations
+  conversation   Conversation        @relation(fields: [conversation_id], references: [conversation_id])
+  sender         User                @relation("SenderMessages", fields: [sender_user_id], references: [user_id])
+  parent_message Message?            @relation("MessageThread", fields: [parent_message_id], references: [message_id])
+  replies        Message[]           @relation("MessageThread")
+  read_by        MessageRead[]
+  reactions      MessageReaction[]
+  attachments    MessageAttachment[]
+
+  @@map("messages")
+}
+
+model MessageRead {
+  read_id    Int      @id @default(autoincrement())
+  message_id Int
+  user_id    Int
+  read_at    DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  message Message @relation(fields: [message_id], references: [message_id])
+  user    User    @relation(fields: [user_id], references: [user_id])
+
+  @@unique([message_id, user_id])
+  @@map("message_reads")
+}
+
+model MessageReaction {
+  reaction_id   Int      @id @default(autoincrement())
+  message_id    Int
+  user_id       Int
+  reaction_type String   @db.VarChar(20)
+  reacted_at    DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  message Message @relation(fields: [message_id], references: [message_id])
+  user    User    @relation(fields: [user_id], references: [user_id])
+
+  @@unique([message_id, user_id, reaction_type])
+  @@map("message_reactions")
+}
+
+model PinnedConversation {
+  pinned_id         Int      @id @default(autoincrement())
+  conversation_id   Int
+  pinned_by_user_id Int
+  pinned_at         DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  conversation Conversation @relation(fields: [conversation_id], references: [conversation_id])
+  user         User         @relation(fields: [pinned_by_user_id], references: [user_id])
+
+  @@unique([conversation_id, pinned_by_user_id])
+  @@map("pinned_conversations")
+}
+
+// =====================================================
+// 5. TASK MANAGEMENT
+// =====================================================
+
+model Task {
+  task_id             Int       @id @default(autoincrement())
+  conversation_id     Int
+  assigned_by_user_id Int
+  task_type_id        Int
+  priority_id         Int
+  status_id           Int
+  due_date            DateTime? @db.Date
+  deliverable_summary String?   @db.Text
+  completed_at        DateTime? @db.Timestamp(6)
+  deleted_at          DateTime? @db.Timestamp(6)
+  created_at          DateTime  @default(now()) @db.Timestamp(6)
+  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  conversation Conversation     @relation(fields: [conversation_id], references: [conversation_id])
+  assigned_by  User             @relation("CreatedTasks", fields: [assigned_by_user_id], references: [user_id])
+  task_type    TaskType         @relation(fields: [task_type_id], references: [task_type_id])
+  priority     Priority         @relation(fields: [priority_id], references: [priority_id])
+  status       Status           @relation(fields: [status_id], references: [status_id])
+  assignments  TaskAssignment[]
+  updates      TaskUpdate[]
+  feedback     TaskFeedback[]
+   attachments  TaskAttachment[]
+   user         User?            @relation("AssignedTasks", fields: [assigned_to_user_id], references: [user_id])
+   assigned_to_user_id Int?
+
+   @@map("tasks")
+}
+
+model TaskAssignment {
+  assignment_id       Int      @id @default(autoincrement())
+  task_id             Int
+  user_id             Int
+  assigned_by_user_id Int
+  assigned_at         DateTime @default(now()) @db.Timestamp(6)
+  assignment_status   String   @default("assigned") @db.VarChar(30)
+
+  // Relations
+  task        Task @relation(fields: [task_id], references: [task_id])
+  user        User @relation(fields: [user_id], references: [user_id])
+  assigned_by User @relation("TaskAssigner", fields: [assigned_by_user_id], references: [user_id])
+
+  @@unique([task_id, user_id])
+  @@map("task_assignments")
+}
+
+model TaskUpdate {
+  update_id        Int      @id @default(autoincrement())
+  task_id          Int
+  user_id          Int
+  update_text      String   @db.Text
+  progress_percent Int?
+  submitted_at     DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  task Task @relation(fields: [task_id], references: [task_id])
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("task_updates")
+}
+
+model TaskFeedback {
+  feedback_id   Int      @id @default(autoincrement())
+  task_id       Int
+  from_user_id  Int
+  feedback_text String   @db.Text
+  rating        Int?
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  task      Task @relation(fields: [task_id], references: [task_id])
+  from_user User @relation(fields: [from_user_id], references: [user_id])
+
+  @@map("task_feedback")
+}
+
+// =====================================================
+// 6. FILE MANAGEMENT
+// =====================================================
+
+model File {
+  file_id             Int      @id @default(autoincrement())
+  file_name           String   @db.VarChar(255)
+  original_name       String?  @db.VarChar(255)
+  file_url            String   @db.Text
+  mime_type           String?  @db.VarChar(100)
+  file_extension      String?  @db.VarChar(20)
+  file_size           BigInt?
+  uploaded_by_user_id Int
+  storage_provider    String?  @db.VarChar(50)
+  is_public           Boolean  @default(false)
+  created_at          DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  uploaded_by         User                @relation("UploadedFiles", fields: [uploaded_by_user_id], references: [user_id])
+  message_attachments MessageAttachment[]
+  task_attachments    TaskAttachment[]
+  notice_attachments  NoticeAttachment[]
+  forum_attachments   ForumAttachment[]
+  resources           Resource[]
+
+  @@map("files")
+}
+
+model MessageAttachment {
+  attachment_id Int      @id @default(autoincrement())
+  message_id    Int
+  file_id       Int
+  uploaded_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  message Message @relation(fields: [message_id], references: [message_id])
+  file    File    @relation(fields: [file_id], references: [file_id])
+
+  @@unique([message_id, file_id])
+  @@map("message_attachments")
+}
+
+model TaskAttachment {
+  attachment_id Int      @id @default(autoincrement())
+  task_id       Int
+  file_id       Int
+  uploaded_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  task Task @relation(fields: [task_id], references: [task_id])
+  file File @relation(fields: [file_id], references: [file_id])
+
+  @@unique([task_id, file_id])
+  @@map("task_attachments")
+}
+
+// =====================================================
+// 7. NOTICE MODULE
+// =====================================================
+
+model NoticeCategory {
+  category_id   Int    @id @default(autoincrement())
+  category_name String @unique @db.VarChar(50)
+
+  // Relations
+  notices Notice[]
+
+  @@map("notice_categories")
+}
+
+model Notice {
+  notice_id            Int       @id @default(autoincrement())
+  title                String    @db.VarChar(200)
+  content              String    @db.Text
+  published_by_user_id Int
+  category_id          Int
+  notice_type          String?   @db.VarChar(30)
+  scheduled_publish_at DateTime? @db.Timestamp(6)
+  published_at         DateTime? @db.Timestamp(6)
+  expires_at           DateTime? @db.Timestamp(6)
+  status_id            Int
+  deleted_at           DateTime? @db.Timestamp(6)
+  created_at           DateTime  @default(now()) @db.Timestamp(6)
+  updated_at           DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  published_by User               @relation("PublishedNotices", fields: [published_by_user_id], references: [user_id])
+  category     NoticeCategory     @relation(fields: [category_id], references: [category_id])
+  status       Status             @relation(fields: [status_id], references: [status_id])
+  targets      NoticeTarget[]
+  attachments  NoticeAttachment[]
+  views        NoticeView[]
+
+  @@map("notices")
+}
+
+model NoticeTarget {
+  target_id   Int    @id @default(autoincrement())
+  notice_id   Int
+  org_node_id Int?
+  role_id     Int?
+  target_type String @db.VarChar(20)
+
+  // Relations
+  notice   Notice                   @relation(fields: [notice_id], references: [notice_id])
+  org_node OrganizationalStructure? @relation(fields: [org_node_id], references: [org_node_id])
+  role     Role?                    @relation(fields: [role_id], references: [role_id])
+
+  @@map("notice_targets")
+}
+
+model NoticeAttachment {
+  attachment_id Int      @id @default(autoincrement())
+  notice_id     Int
+  file_id       Int
+  uploaded_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  notice Notice @relation(fields: [notice_id], references: [notice_id])
+  file   File   @relation(fields: [file_id], references: [file_id])
+
+  @@map("notice_attachments")
+}
+
+model NoticeView {
+  view_id   Int      @id @default(autoincrement())
+  notice_id Int
+  user_id   Int
+  viewed_at DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  notice Notice @relation(fields: [notice_id], references: [notice_id])
+  user   User   @relation(fields: [user_id], references: [user_id])
+
+  @@unique([notice_id, user_id])
+  @@map("notice_views")
+}
+
+// =====================================================
+// 8. FORUM MODULE
+// =====================================================
+
+model ForumTag {
+  tag_id   Int    @id @default(autoincrement())
+  tag_name String @unique @db.VarChar(50)
+
+  // Relations
+  topics TopicTagMapping[]
+
+  @@map("forum_tags")
+}
+
+model ForumTopic {
+  topic_id       Int       @id @default(autoincrement())
+  title          String    @db.VarChar(200)
+  content        String    @db.Text
+  author_user_id Int
+  org_node_id    Int?
+  is_pinned      Boolean   @default(false)
+  is_locked      Boolean   @default(false)
+  view_count     Int       @default(0)
+  deleted_at     DateTime? @db.Timestamp(6)
+  created_at     DateTime  @default(now()) @db.Timestamp(6)
+  updated_at     DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  author      User                     @relation(fields: [author_user_id], references: [user_id])
+  org_node    OrganizationalStructure? @relation(fields: [org_node_id], references: [org_node_id])
+  comments    ForumComment[]
+  tags        TopicTagMapping[]
+  likes       TopicLike[]
+  attachments ForumAttachment[]
+
+  @@map("forum_topics")
+}
+
+model ForumComment {
+  comment_id        Int      @id @default(autoincrement())
+  topic_id          Int
+  parent_comment_id Int?
+  author_user_id    Int
+  content           String   @db.Text
+  likes_count       Int      @default(0)
+  is_edited         Boolean  @default(false)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  topic          ForumTopic     @relation(fields: [topic_id], references: [topic_id])
+  parent_comment ForumComment?  @relation("CommentThread", fields: [parent_comment_id], references: [comment_id])
+  replies        ForumComment[] @relation("CommentThread")
+  author         User           @relation(fields: [author_user_id], references: [user_id])
+
+  @@map("forum_comments")
+}
+
+model TopicTagMapping {
+  mapping_id Int @id @default(autoincrement())
+  topic_id   Int
+  tag_id     Int
+
+  // Relations
+  topic ForumTopic @relation(fields: [topic_id], references: [topic_id])
+  tag   ForumTag   @relation(fields: [tag_id], references: [tag_id])
+
+  @@unique([topic_id, tag_id])
+  @@map("topic_tag_mapping")
+}
+
+model TopicLike {
+  like_id  Int      @id @default(autoincrement())
+  topic_id Int
+  user_id  Int
+  liked_at DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  topic ForumTopic @relation(fields: [topic_id], references: [topic_id])
+  user  User       @relation(fields: [user_id], references: [user_id])
+
+  @@unique([topic_id, user_id])
+  @@map("topic_likes")
+}
+
+model ForumAttachment {
+  attachment_id Int      @id @default(autoincrement())
+  topic_id      Int
+  file_id       Int
+  uploaded_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  topic ForumTopic @relation(fields: [topic_id], references: [topic_id])
+  file  File       @relation(fields: [file_id], references: [file_id])
+
+  @@unique([topic_id, file_id])
+  @@map("forum_attachments")
+}
+
+// =====================================================
+// 9. RESOURCE MANAGEMENT
+// =====================================================
+
+model ResourceCategory {
+  category_id   Int    @id @default(autoincrement())
+  category_name String @unique @db.VarChar(50)
+
+  // Relations
+  resources ResourceCategoryMapping[]
+
+  @@map("resource_categories")
+}
+
+model Resource {
+  resource_id         Int       @id @default(autoincrement())
+  title               String    @db.VarChar(200)
+  description         String?   @db.Text
+  file_id             Int
+  uploaded_by_user_id Int
+  org_node_id         Int?
+  download_count      Int       @default(0)
+  is_active           Boolean   @default(true)
+  deleted_at          DateTime? @db.Timestamp(6)
+  created_at          DateTime  @default(now()) @db.Timestamp(6)
+  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  file        File                      @relation(fields: [file_id], references: [file_id])
+  uploaded_by User                      @relation("UploadedResources", fields: [uploaded_by_user_id], references: [user_id])
+  org_node    OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
+  categories  ResourceCategoryMapping[]
+  access_logs ResourceAccessLog[]
+
+  @@map("resources")
+}
+
+model ResourceCategoryMapping {
+  mapping_id  Int @id @default(autoincrement())
+  resource_id Int
+  category_id Int
+
+  // Relations
+  resource Resource         @relation(fields: [resource_id], references: [resource_id])
+  category ResourceCategory @relation(fields: [category_id], references: [category_id])
+
+  @@unique([resource_id, category_id])
+  @@map("resource_category_mapping")
+}
+
+model ResourceAccessLog {
+  log_id      Int      @id @default(autoincrement())
+  resource_id Int
+  user_id     Int
+  action      String   @db.VarChar(20)
+  accessed_at DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  resource Resource @relation(fields: [resource_id], references: [resource_id])
+  user     User     @relation(fields: [user_id], references: [user_id])
+
+  @@map("resource_access_logs")
+}
+
+// =====================================================
+// 10. DASHBOARD & REPORTING
+// =====================================================
+
+model DashboardWidget {
+  widget_id        Int     @id @default(autoincrement())
+  widget_name      String  @db.VarChar(100)
+  widget_type      String? @db.VarChar(50)
+  config           Json?
+  default_position Int?
+  is_active        Boolean @default(true)
+
+  // Relations
+  user_configs UserDashboard[]
+
+  @@map("dashboard_widgets")
+}
+
+model UserDashboard {
+  user_dashboard_id Int     @id @default(autoincrement())
+  user_id           Int
+  widget_id         Int
+  layout_order      Int?
+  is_visible        Boolean @default(true)
+
+  // Relations
+  user   User            @relation(fields: [user_id], references: [user_id])
+  widget DashboardWidget @relation(fields: [widget_id], references: [widget_id])
+
+  @@unique([user_id, widget_id])
+  @@map("user_dashboards")
+}
+
+model ReportRequest {
+  request_id           Int       @id @default(autoincrement())
+  requested_by_user_id Int
+  query_text           String    @db.Text
+  response_summary     Json?
+  export_format        String?   @db.VarChar(20)
+  file_url             String?   @db.Text
+  status               String    @default("pending") @db.VarChar(30)
+  created_at           DateTime  @default(now()) @db.Timestamp(6)
+  completed_at         DateTime? @db.Timestamp(6)
+
+  // Relations
+  requested_by User @relation(fields: [requested_by_user_id], references: [user_id])
+
+  @@map("report_requests")
+}
+
+model KpiDefinition {
+  kpi_id              Int      @id @default(autoincrement())
+  kpi_name            String   @unique @db.VarChar(100)
+  calculation_formula String?  @db.Text
+  unit                String?  @db.VarChar(20)
+  target_value        Decimal? @db.Decimal(10, 2)
+  is_active           Boolean  @default(true)
+
+  // Relations
+  snapshots KpiSnapshot[]
+
+  @@map("kpi_definitions")
+}
+
+model KpiSnapshot {
+  snapshot_id   Int      @id @default(autoincrement())
+  kpi_id        Int
+  actual_value  Decimal? @db.Decimal(10, 2)
+  snapshot_date DateTime @default(now()) @db.Date
+  notes         String?  @db.Text
+
+  // Relations
+  kpi KpiDefinition @relation(fields: [kpi_id], references: [kpi_id])
+
+  @@map("kpi_snapshots")
+}
+
+// =====================================================
+// 11. LOGGING & AUDITING
+// =====================================================
+
+model SystemUsageLog {
+  log_id          Int      @id @default(autoincrement())
+  user_id         Int?
+  module_accessed String?  @db.VarChar(50)
+  action          String?  @db.VarChar(100)
+  metadata        Json?
+  ip_address      String?  @db.VarChar(45)
+  user_agent      String?  @db.Text
+  timestamp       DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User? @relation(fields: [user_id], references: [user_id])
+
+  @@map("system_usage_logs")
+}
+
+model AuditLog {
+  audit_id       Int      @id @default(autoincrement())
+  user_id        Int?
+  action         String   @db.VarChar(100)
+  table_affected String?  @db.VarChar(50)
+  record_id      Int?
+  old_values     Json?
+  new_values     Json?
+  ip_address     String?  @db.VarChar(45)
+  timestamp      DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User? @relation(fields: [user_id], references: [user_id])
+
+  @@map("audit_logs")
+}
+
+model PasswordResetToken {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  token        String   @unique
+  expiresAt    DateTime
+  used         Boolean  @default(false)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @db.Timestamp(6)
+
+  // Relations
+  user         User     @relation("PasswordResetTokens", fields: [userId], references: [user_id])
+
+  @@map("password_reset_tokens")
+}
+
+model PasswordHistory {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  password    String   @db.Text
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@map("password_history")
+}
+
+// =====================================================
+// 12. USER PROFILE (Forum & Knowledge Sharing)
+// =====================================================
+
+model UserEducation {
+  education_id     Int      @id @default(autoincrement())
+  user_id          Int
+  degree_level     String?  @db.VarChar(50)
+  field_of_study   String?  @db.VarChar(150)
+  institution_name String?  @db.VarChar(200)
+  graduation_year  Int?
+  thesis_title     String?  @db.Text
+  is_current       Boolean  @default(false)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_education")
+}
+
+model UserExperience {
+  experience_id     Int       @id @default(autoincrement())
+  user_id           Int
+  organization_name String?   @db.VarChar(200)
+  position_title    String?   @db.VarChar(150)
+  employment_type   String?   @db.VarChar(50)
+  start_date        DateTime? @db.Date
+  end_date          DateTime? @db.Date
+  is_current        Boolean   @default(false)
+  responsibilities  String?   @db.Text
+  technologies_used String?   @db.Text
+  created_at        DateTime  @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_experience")
+}
+
+model Skill {
+  skill_id   Int    @id @default(autoincrement())
+  skill_name String @unique @db.VarChar(100)
+
+  // Relations
+  users UserSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  user_skill_id       Int     @id @default(autoincrement())
+  user_id             Int
+  skill_id            Int
+  proficiency_level   String? @db.VarChar(30)
+  years_of_experience Int?
+
+  // Relations
+  user  User  @relation(fields: [user_id], references: [user_id])
+  skill Skill @relation(fields: [skill_id], references: [skill_id])
+
+  @@unique([user_id, skill_id])
+  @@map("user_skills")
+}
