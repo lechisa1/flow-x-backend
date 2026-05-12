@@ -15,6 +15,8 @@ import { MailModule } from './modules/mail/mail.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { OrganizationModule } from './modules/organization/organization.module';
+import { PrioritiesModule } from './modules/priorities/priorities.module';
+import { NoticesModule } from './modules/notices/notices.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -44,6 +46,8 @@ import { OrganizationModule } from './modules/organization/organization.module';
     PermissionsModule,
     RolesModule,
     OrganizationModule,
+    PrioritiesModule,
+    NoticesModule,
   ],
   providers: [
     PrismaService,

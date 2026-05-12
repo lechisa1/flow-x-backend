@@ -9,8 +9,6 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import {
@@ -24,7 +22,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import {
@@ -62,41 +60,41 @@ export class OrganizationController {
     };
   }
 
-   @Get('nodes')
-   //   @Permissions('organization:read')
-   @ApiOperation({ summary: 'Get all organization nodes' })
-   @ApiQuery({ name: 'page', required: false, type: Number })
-   @ApiQuery({ name: 'limit', required: false, type: Number })
-   @ApiQuery({ name: 'search', required: false })
-   @ApiQuery({ name: 'nodeType', required: false })
-   async findAllNodes(
-     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-     @Query('search') search?: string,
-     @Query('nodeType') nodeType?: string,
-   ) {
-     return this.organizationService.findAllNodes(
-       page ?? 1,
-       limit ?? 10,
-       search,
-       nodeType,
-     );
-   }
+  @Get('nodes')
+  //   @Permissions('organization:read')
+  @ApiOperation({ summary: 'Get all organization nodes' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'nodeType', required: false })
+  async findAllNodes(
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('search') search?: string,
+    @Query('nodeType') nodeType?: string,
+  ) {
+    return this.organizationService.findAllNodes(
+      page ?? 1,
+      limit ?? 10,
+      search,
+      nodeType,
+    );
+  }
 
-   @Get('nodes/tree')
-   @Permissions('organization:read')
-   @ApiOperation({ summary: 'Get organization tree' })
-   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
-   @ApiQuery({ name: 'maxDepth', required: false, type: Number })
-   async getTree(
-     @Query('includeInactive') includeInactive?: boolean,
-     @Query('maxDepth') maxDepth?: number,
-   ) {
-     return this.organizationService.getOrganizationTree({
-       includeInactive: includeInactive === true,
-       maxDepth: maxDepth ? +maxDepth : undefined,
-     });
-   }
+  @Get('nodes/tree')
+  @Permissions('organization:read')
+  @ApiOperation({ summary: 'Get organization tree' })
+  @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
+  @ApiQuery({ name: 'maxDepth', required: false, type: Number })
+  async getTree(
+    @Query('includeInactive') includeInactive?: boolean,
+    @Query('maxDepth') maxDepth?: number,
+  ) {
+    return this.organizationService.getOrganizationTree({
+      includeInactive: includeInactive === true,
+      maxDepth: maxDepth ? +maxDepth : undefined,
+    });
+  }
 
   @Get('nodes/:id')
   @Permissions('organization:read')
@@ -105,18 +103,18 @@ export class OrganizationController {
     return this.organizationService.findNode(id);
   }
 
-   @Get('nodes/:id/users')
-   @Permissions('organization:read')
-   @ApiOperation({ summary: 'Get users assigned to a node' })
-   @ApiQuery({ name: 'page', required: false, type: Number })
-   @ApiQuery({ name: 'limit', required: false, type: Number })
-   async getNodeUsers(
-     @Param('id', ParseIntPipe) id: number,
-     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-   ) {
-     return this.organizationService.getNodeUsers(id, page ?? 1, limit ?? 10);
-   }
+  @Get('nodes/:id/users')
+  @Permissions('organization:read')
+  @ApiOperation({ summary: 'Get users assigned to a node' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getNodeUsers(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
+    return this.organizationService.getNodeUsers(id, page ?? 1, limit ?? 10);
+  }
 
   @Put('nodes/:id')
   @Permissions('organization:update')
@@ -185,19 +183,23 @@ export class OrganizationController {
     };
   }
 
-   @Get('positions')
-   @Permissions('organization:read')
-   @ApiOperation({ summary: 'Get all positions' })
-   @ApiQuery({ name: 'page', required: false, type: Number })
-   @ApiQuery({ name: 'limit', required: false, type: Number })
-   @ApiQuery({ name: 'search', required: false })
-   async findAllPositions(
-     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-     @Query('search') search?: string,
-   ) {
-     return this.organizationService.findAllPositions(page ?? 1, limit ?? 10, search);
-   }
+  @Get('positions')
+  @Permissions('organization:read')
+  @ApiOperation({ summary: 'Get all positions' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false })
+  async findAllPositions(
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('search') search?: string,
+  ) {
+    return this.organizationService.findAllPositions(
+      page ?? 1,
+      limit ?? 10,
+      search,
+    );
+  }
 
   @Put('positions/:id')
   @Permissions('organization:update')

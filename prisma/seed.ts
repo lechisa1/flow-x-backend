@@ -100,6 +100,14 @@ async function main() {
     { resource: 'permissions', action: 'revoke' },
     { resource: 'permissions', action: 'de-activate' },
     { resource: 'permissions', action: 'activate' },
+    { resource: 'notices', action: 'create' },
+    { resource: 'notices', action: 'read' },
+    { resource: 'notices', action: 'update' },
+    { resource: 'notices', action: 'delete' },
+    { resource: 'notices', action: 'publish' },
+    { resource: 'notices', action: 'archive' },
+    { resource: 'notices', action: 'schedule' },
+    { resource: 'notices', action: 'manage_categories' },
   ];
 
   for (const perm of permissions) {

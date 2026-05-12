@@ -1,3 +1,5 @@
 #to seed data use command below
 
 # npx prisma db seed
+#to run ue the comman npm run start:development
+#to migrate npx prisma generate
