@@ -22,4 +22,3 @@ export interface UserAssignmentWithDetails {
   is_node_head: boolean;
   assigned_at: Date;
 }
-

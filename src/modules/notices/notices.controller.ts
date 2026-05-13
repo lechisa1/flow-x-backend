@@ -13,6 +13,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { NoticesService } from './notices.service';
+import { UploadedFiles, UseInterceptors } from '@nestjs/common';
+
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+
+import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import {
   CreateNoticeDto,
   UpdateNoticeDto,
@@ -42,16 +49,95 @@ export class NoticesController {
   constructor(private noticesService: NoticesService) {}
 
   @Post()
-  //   @Permissions('notices:create')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (_, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new notice' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+        },
+        content: {
+          type: 'string',
+        },
+        category_id: {
+          type: 'number',
+        },
+        notice_type: {
+          type: 'string',
+        },
+        scheduled_publish_at: {
+          type: 'string',
+          format: 'date-time',
+        },
+        expires_at: {
+          type: 'string',
+          format: 'date-time',
+        },
+
+        targets: {
+          type: 'string',
+          example: '[{"org_node_id":1,"role_id":2,"target_type":"org_node"}]',
+        },
+
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
   async create(
-    @Body() createNoticeDto: CreateNoticeDto,
+    @Body() createNoticeDto: any,
+    @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() user: any,
   ) {
+    // Parse targets because multipart/form-data sends string
+    if (createNoticeDto.targets) {
+      createNoticeDto.targets = JSON.parse(createNoticeDto.targets);
+    }
+
+    // Parse category_id as integer for multipart/form-data
+    if (createNoticeDto.category_id !== undefined) {
+      createNoticeDto.category_id = parseInt(createNoticeDto.category_id, 10);
+    }
+
+    // Save uploaded files and get their IDs
+    const fileIds: number[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const savedFile = await this.noticesService.saveFile(
+          file,
+          user.user_id,
+        );
+        fileIds.push(savedFile.file_id);
+      }
+    }
+
+    // Use saved file IDs as attachment_ids
+    createNoticeDto.attachment_ids = fileIds;
+
     const notice = await this.noticesService.create(
       createNoticeDto,
       user.user_id,
     );
+
     return {
       message: 'Notice created successfully',
       data: notice,

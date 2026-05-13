@@ -43,7 +43,11 @@ export class NoticesService {
         title: createNoticeDto.title,
         content: createNoticeDto.content,
         published_by_user_id: userId,
-        category_id: createNoticeDto.category_id ?? 0,
+        category_id: createNoticeDto.category_id
+          ? typeof createNoticeDto.category_id === 'string'
+            ? parseInt(createNoticeDto.category_id, 10)
+            : createNoticeDto.category_id
+          : 0,
         notice_type: createNoticeDto.notice_type,
         scheduled_publish_at: createNoticeDto.scheduled_publish_at
           ? new Date(createNoticeDto.scheduled_publish_at)
@@ -375,7 +379,12 @@ export class NoticesService {
       data: {
         title: updateNoticeDto.title,
         content: updateNoticeDto.content,
-        category_id: updateNoticeDto.category_id,
+        category_id:
+          updateNoticeDto.category_id !== undefined
+            ? typeof updateNoticeDto.category_id === 'string'
+              ? parseInt(updateNoticeDto.category_id, 10)
+              : updateNoticeDto.category_id
+            : undefined,
         notice_type: updateNoticeDto.notice_type,
         scheduled_publish_at: updateNoticeDto.scheduled_publish_at
           ? new Date(updateNoticeDto.scheduled_publish_at)
@@ -964,7 +973,7 @@ export class NoticesService {
       return users.map((u) => u.user_id);
     }
 
-    let userIds: number[] = [];
+    const userIds: number[] = [];
 
     for (const target of notice.targets) {
       if (target.target_type === 'all') {
@@ -1052,5 +1061,19 @@ export class NoticesService {
     });
 
     return { message: 'Category deleted successfully' };
+  }
+
+  async saveFile(file: Express.Multer.File, userId: number) {
+    return this.prisma.file.create({
+      data: {
+        file_name: file.filename,
+        original_name: file.originalname,
+        file_url: `/uploads/${file.filename}`,
+        mime_type: file.mimetype,
+        file_extension: file.originalname.split('.').pop() || '',
+        file_size: BigInt(file.size),
+        uploaded_by_user_id: userId,
+      },
+    });
   }
 }

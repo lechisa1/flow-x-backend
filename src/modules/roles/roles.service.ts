@@ -69,8 +69,18 @@ export class RolesService {
     const where: Prisma.RoleWhereInput = search
       ? {
           OR: [
-            { role_name: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            { description: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              role_name: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+            {
+              description: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
           ],
         }
       : {};
@@ -229,7 +239,9 @@ export class RolesService {
       oldRole
         ? {
             role_name: oldRole.role_name,
-            permissions: oldRole.permissions.map((p) => p.permission.permission_name),
+            permissions: oldRole.permissions.map(
+              (p) => p.permission.permission_name,
+            ),
           }
         : null,
       {

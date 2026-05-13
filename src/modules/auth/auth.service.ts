@@ -685,4 +685,52 @@ export class AuthService {
       },
     });
   }
+
+  async validateToken(token: string): Promise<any> {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get('config.jwt.secret'),
+      });
+      const user = await this.prisma.user.findUnique({
+        where: { user_id: payload.sub },
+        include: {
+          assigned_roles: {
+            include: {
+              role: {
+                include: {
+                  permissions: {
+                    include: {
+                      permission: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!user || !user.is_active || user.deleted_at) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      // Extract roles and permissions
+      const roles = user.assigned_roles.map((ur) => ur.role.role_name);
+      const permissions = user.assigned_roles.flatMap((ur) =>
+        ur.role.permissions.map(
+          (rp) => `${rp.permission.resource}:${rp.permission.action}`,
+        ),
+      );
+
+      return {
+        user_id: user.user_id,
+        email: user.email,
+        full_name: user.full_name,
+        roles,
+        permissions,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 }

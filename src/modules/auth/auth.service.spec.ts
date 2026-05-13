@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import * as crypto from 'crypto';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -101,9 +101,9 @@ describe('AuthService', () => {
       const resetToken = 'hashed-reset-token';
       const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
-      jest
-        .spyOn(randomBytes, 'default')
-        .mockReturnValueOnce({ toString: () => resetToken } as any);
+jest
+         .spyOn(crypto, 'randomBytes')
+         .mockReturnValue({ toString: () => resetToken } as any);
       mockPrismaService.user.findUnique.mockResolvedValue(user);
       mockPrismaService.passwordResetToken.create.mockResolvedValue({});
 
@@ -156,7 +156,7 @@ describe('AuthService', () => {
       mockPrismaService.passwordResetToken.findFirst.mockResolvedValue(
         resetToken,
       );
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashedPassword);
+      jest.spyOn(bcrypt, 'hash' as any).mockResolvedValue(hashedPassword);
       mockPrismaService.user.update.mockResolvedValue({});
       mockPrismaService.passwordResetToken.update.mockResolvedValue({});
       mockPrismaService.userSession.deleteMany.mockResolvedValue({});

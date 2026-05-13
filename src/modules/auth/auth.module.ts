@@ -24,12 +24,7 @@ import { MailModule } from '../mail/mail.module';
     MailModule,
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    PrismaService,
-    JwtStrategy,
-    LocalStrategy,
-  ],
+  providers: [AuthService, PrismaService, JwtStrategy, LocalStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

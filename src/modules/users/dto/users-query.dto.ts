@@ -10,7 +10,11 @@ export class UsersQueryDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ example: 10, description: 'Items per page', default: 10 })
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'Items per page',
+    default: 10,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

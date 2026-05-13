@@ -33,10 +33,12 @@ export class UsersController {
   @Get()
   // @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Get all users' })
-  async findAll(
-    @Query() query: UsersQueryDto,
-  ) {
-    return this.usersService.findAll(query.page ?? 1, query.limit ?? 10, query.search);
+  async findAll(@Query() query: UsersQueryDto) {
+    return this.usersService.findAll(
+      query.page ?? 1,
+      query.limit ?? 10,
+      query.search,
+    );
   }
 
   @Get('profile')

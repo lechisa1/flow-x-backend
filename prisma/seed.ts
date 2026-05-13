@@ -108,6 +108,14 @@ async function main() {
     { resource: 'notices', action: 'archive' },
     { resource: 'notices', action: 'schedule' },
     { resource: 'notices', action: 'manage_categories' },
+    //here are the communication permissions
+    { resource: 'chat', action: 'create' },
+    { resource: 'chat', action: 'read' },
+    { resource: 'chat', action: 'send' },
+    { resource: 'chat', action: 'manage' },
+    { resource: 'chat', action: 'request' },
+    { resource: 'chat', action: 'respond' },
+    { resource: 'chat', action: 'block' },
   ];
 
   for (const perm of permissions) {
@@ -230,7 +238,30 @@ async function main() {
       create: priority,
     });
   }
+  const conversationTypes = [
+    {
+      type_name: 'direct',
+      description: 'One-on-one private conversation between two users',
+    },
+    {
+      type_name: 'group',
+      description: 'Group conversation with multiple participants',
+    },
+    {
+      type_name: 'node',
+      description: 'Conversation for all members of an organizational node',
+    },
+    { type_name: 'project', description: 'Project-specific conversation' },
+  ];
 
+  for (const type of conversationTypes) {
+    await prisma.conversationType.upsert({
+      where: { type_name: type.type_name },
+      update: {},
+      create: type,
+    });
+    console.log(`✅ Created/Updated: ${type.type_name}`);
+  }
   console.log('✅ Seeding completed!');
 }
 

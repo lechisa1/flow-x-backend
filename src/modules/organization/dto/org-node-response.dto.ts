@@ -112,7 +112,8 @@ export class OrgNodeResponseDto {
   }
 
   constructor(data: any) {
-    const { parent, children, user_assignments, parent_node_id, ...rest } = data;
+    const { parent, children, user_assignments, parent_node_id, ...rest } =
+      data;
     Object.assign(this, rest);
     this.parent_node_id = parent_node_id ?? undefined;
     if (parent) {

@@ -150,7 +150,9 @@ export class NoticeResponseDto {
   @ApiPropertyOptional()
   get is_published(): boolean {
     return (
-      this.published_at !== null && this.published_at !== undefined && new Date(this.published_at) <= new Date()
+      this.published_at !== null &&
+      this.published_at !== undefined &&
+      new Date(this.published_at) <= new Date()
     );
   }
 

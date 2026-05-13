@@ -11,9 +11,21 @@ export class PermissionsService {
     const where: Prisma.PermissionWhereInput = search
       ? {
           OR: [
-            { permission_name: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            { resource: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            { action: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              permission_name: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+            {
+              resource: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+            {
+              action: { contains: search, mode: Prisma.QueryMode.insensitive },
+            },
           ],
         }
       : {};
@@ -79,14 +91,17 @@ export class PermissionsService {
       orderBy: [{ resource: 'asc' }, { action: 'asc' }],
     });
 
-    const grouped = permissions.reduce((acc, permission) => {
-      const resource = permission.resource ?? 'unknown';
-      if (!acc[resource]) {
-        acc[resource] = [];
-      }
-      acc[resource].push(permission);
-      return acc;
-    }, {} as Record<string, typeof permissions>);
+    const grouped = permissions.reduce(
+      (acc, permission) => {
+        const resource = permission.resource ?? 'unknown';
+        if (!acc[resource]) {
+          acc[resource] = [];
+        }
+        acc[resource].push(permission);
+        return acc;
+      },
+      {} as Record<string, typeof permissions>,
+    );
 
     return grouped;
   }

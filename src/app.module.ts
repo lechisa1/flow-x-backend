@@ -17,6 +17,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { PrioritiesModule } from './modules/priorities/priorities.module';
 import { NoticesModule } from './modules/notices/notices.module';
+import { CommunicationModule } from './modules/communication/communication.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +49,7 @@ import { NoticesModule } from './modules/notices/notices.module';
     OrganizationModule,
     PrioritiesModule,
     NoticesModule,
+    CommunicationModule,
   ],
   providers: [
     PrismaService,

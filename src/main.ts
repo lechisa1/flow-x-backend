@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +27,14 @@ async function bootstrap() {
   // Middleware
   app.use(helmet());
   app.use(cookieParser());
+
+  // Serve static files from uploads directory
+  (app as NestExpressApplication).useStaticAssets(
+    join(__dirname, '..', 'uploads'),
+    {
+      prefix: '/uploads/',
+    },
+  );
 
   // CORS
   app.enableCors({

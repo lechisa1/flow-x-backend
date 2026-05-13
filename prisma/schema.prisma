@@ -27,43 +27,47 @@ model User {
   updated_at      DateTime  @default(now()) @updatedAt @db.Timestamp(6)
 
   // Relations
-  assigned_roles           UserRole[]
-  sessions                 UserSession[]
-  activation_logs          UserActivationLog[]
-  presence                 UserPresence?
-  devices                  UserDevice[]
-  assigned_positions       UserAssignment[]
-  sent_messages            Message[]                 @relation("SenderMessages")
-  received_tasks           Task[]                    @relation("AssignedTasks")
-  created_tasks            Task[]                    @relation("CreatedTasks")
-  task_assignments         TaskAssignment[]
-  task_updates             TaskUpdate[]
-  task_feedback            TaskFeedback[]
-  uploaded_files           File[]                    @relation("UploadedFiles")
-  published_notices        Notice[]                  @relation("PublishedNotices")
-  forum_topics             ForumTopic[]
-  forum_comments           ForumComment[]
-  topic_likes              TopicLike[]
-  uploaded_resources       Resource[]                @relation("UploadedResources")
-  dashboard_configs        UserDashboard[]
-  report_requests          ReportRequest[]
-  system_logs              SystemUsageLog[]
-  audit_logs               AuditLog[]
-  education                UserEducation[]
-  experience               UserExperience[]
-  skills                   UserSkill[]
-  conversations            Conversation[]                     @relation("InitiatedConversations")
-  conversation_user_links  Conversation[]                     @relation("ConversationUser")
-  conversationParticipants ConversationParticipant[]
-  messageReads             MessageRead[]
-  messageReactions         MessageReaction[]
-  pinnedConversations      PinnedConversation[]
-  noticeViews              NoticeView[]
-  resourceAccessLogs       ResourceAccessLog[]
-  assigned_task_assignments TaskAssignment[] @relation("TaskAssigner")
-  passwordResetTokens       PasswordResetToken[] @relation("PasswordResetTokens")
+  assigned_roles            UserRole[]
+  sessions                  UserSession[]
+  activation_logs           UserActivationLog[]
+  presence                  UserPresence?
+  devices                   UserDevice[]
+  assigned_positions        UserAssignment[]
+  sent_messages             Message[]                 @relation("SenderMessages")
+  received_tasks            Task[]                    @relation("AssignedTasks")
+  created_tasks             Task[]                    @relation("CreatedTasks")
+  task_assignments          TaskAssignment[]
+  task_updates              TaskUpdate[]
+  task_feedback             TaskFeedback[]
+  uploaded_files            File[]                    @relation("UploadedFiles")
+  published_notices         Notice[]                  @relation("PublishedNotices")
+  forum_topics              ForumTopic[]
+  forum_comments            ForumComment[]
+  topic_likes               TopicLike[]
+  uploaded_resources        Resource[]                @relation("UploadedResources")
+  dashboard_configs         UserDashboard[]
+  report_requests           ReportRequest[]
+  system_logs               SystemUsageLog[]
+  audit_logs                AuditLog[]
+  education                 UserEducation[]
+  experience                UserExperience[]
+  skills                    UserSkill[]
+  conversations             Conversation[]            @relation("InitiatedConversations")
+  conversation_user_links   Conversation[]            @relation("ConversationUser")
+  conversationParticipants  ConversationParticipant[]
+  messageReads              MessageRead[]
+  messageReactions          MessageReaction[]
+  pinnedConversations       PinnedConversation[]
+  noticeViews               NoticeView[]
+  resourceAccessLogs        ResourceAccessLog[]
+  assigned_task_assignments TaskAssignment[]          @relation("TaskAssigner")
+  passwordResetTokens       PasswordResetToken[]      @relation("PasswordResetTokens")
   passwordHistory           PasswordHistory[]
-  role_assignments          UserRole[] @relation("UserRolesAssigned")
+  role_assignments          UserRole[]                @relation("UserRolesAssigned")
+  chat_requests_from        ChatRequest[]             @relation("ChatRequestFromUser")
+  chat_requests_to          ChatRequest[]             @relation("ChatRequestToUser")
+  blocked_by                BlockedUser[]             @relation("BlockedUserBlocker")
+  blocked_users             BlockedUser[]             @relation("BlockedUserBlocked")
 
   @@map("users")
 }
@@ -103,8 +107,8 @@ model UserRole {
   assigned_at  DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
-  user    User  @relation(fields: [user_id], references: [user_id])
-  role    Role  @relation(fields: [role_id], references: [role_id])
+  user     User  @relation(fields: [user_id], references: [user_id])
+  role     Role  @relation(fields: [role_id], references: [role_id])
   assigner User? @relation("UserRolesAssigned", fields: [assigned_by], references: [user_id])
 
   @@unique([user_id, role_id])
@@ -186,15 +190,15 @@ model UserDevice {
 // =====================================================
 
 model OrganizationalStructure {
-  org_node_id    Int      @id @default(autoincrement())
-  node_name      String   @db.VarChar(100)
-  node_type      String   @db.VarChar(50)
+  org_node_id    Int                       @id @default(autoincrement())
+  node_name      String                    @db.VarChar(100)
+  node_type      String                    @db.VarChar(50)
   parent_node_id Int?
-  parent         OrganizationalStructure? @relation("OrgNodeParent", fields: [parent_node_id], references: [org_node_id])
+  parent         OrganizationalStructure?  @relation("OrgNodeParent", fields: [parent_node_id], references: [org_node_id])
   children       OrganizationalStructure[] @relation("OrgNodeParent")
-  level          Int      @default(0)
-  is_active      Boolean  @default(true)
-  created_at     DateTime @default(now()) @db.Timestamp(6)
+  level          Int                       @default(0)
+  is_active      Boolean                   @default(true)
+  created_at     DateTime                  @default(now()) @db.Timestamp(6)
 
   // Relations
   user_assignments UserAssignment[]
@@ -320,27 +324,62 @@ model ConversationType {
 }
 
 model Conversation {
-  conversation_id      Int      @id @default(autoincrement())
-  title                String   @db.VarChar(200)
-  initiator_user_id    Int
-  org_node_id          Int?
-  conversation_type_id Int
-  is_active            Boolean  @default(true)
-  created_at           DateTime @default(now()) @db.Timestamp(6)
-  updated_at           DateTime @default(now()) @updatedAt @db.Timestamp(6)
+   conversation_id      Int      @id @default(autoincrement())
+   title                String   @db.VarChar(200)
+   initiator_user_id    Int
+   org_node_id          Int?
+   conversation_type_id Int
+   is_active            Boolean  @default(true)
+   created_at           DateTime @default(now()) @db.Timestamp(6)
+   updated_at           DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+   // Relations
+   initiator         User                      @relation("InitiatedConversations", fields: [initiator_user_id], references: [user_id])
+   org_node          OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
+   conversation_type ConversationType          @relation(fields: [conversation_type_id], references: [conversation_type_id])
+   participants      ConversationParticipant[]
+   messages          Message[]
+   pinned_by_users   PinnedConversation[]
+   tasks             Task[]
+    user              User?                     @relation("ConversationUser", fields: [userUser_id], references: [user_id])
+    userUser_id       Int?
+   chatRequests      ChatRequest[] @relation("ChatRequestConversation")
+
+   @@map("conversations")
+ }
+
+model ChatRequest {
+  request_id      Int       @id @default(autoincrement())
+  from_user_id    Int
+  to_user_id      Int
+  status          String    @default("pending") // pending, accepted, rejected, blocked
+  message         String?
+  requested_at    DateTime  @default(now()) @db.Timestamp(6)
+  responded_at    DateTime? @db.Timestamp(6)
+  conversation_id Int?
 
   // Relations
-  initiator         User                      @relation("InitiatedConversations", fields: [initiator_user_id], references: [user_id])
-  org_node          OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
-  conversation_type ConversationType          @relation(fields: [conversation_type_id], references: [conversation_type_id])
-  participants      ConversationParticipant[]
-  messages          Message[]
-  pinned_by_users   PinnedConversation[]
-  tasks             Task[]
-   user              User?                     @relation("ConversationUser", fields: [userUser_id], references: [user_id])
-   userUser_id       Int?
+  from_user    User          @relation("ChatRequestFromUser", fields: [from_user_id], references: [user_id])
+  to_user      User          @relation("ChatRequestToUser", fields: [to_user_id], references: [user_id])
+  conversation Conversation? @relation("ChatRequestConversation", fields: [conversation_id], references: [conversation_id])
 
-  @@map("conversations")
+  @@index([from_user_id, to_user_id])
+  @@map("chat_requests")
+}
+
+model BlockedUser {
+  block_id   Int      @id @default(autoincrement())
+  blocker_id Int
+  blocked_id Int
+  reason     String?
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  blocker     User @relation("BlockedUserBlocker", fields: [blocker_id], references: [user_id])
+  blockedUser User @relation("BlockedUserBlocked", fields: [blocked_id], references: [user_id])
+
+  @@unique([blocker_id, blocked_id])
+  @@map("blocked_users")
 }
 
 model ConversationParticipant {
@@ -442,19 +481,19 @@ model Task {
   updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
 
   // Relations
-  conversation Conversation     @relation(fields: [conversation_id], references: [conversation_id])
-  assigned_by  User             @relation("CreatedTasks", fields: [assigned_by_user_id], references: [user_id])
-  task_type    TaskType         @relation(fields: [task_type_id], references: [task_type_id])
-  priority     Priority         @relation(fields: [priority_id], references: [priority_id])
-  status       Status           @relation(fields: [status_id], references: [status_id])
-  assignments  TaskAssignment[]
-  updates      TaskUpdate[]
-  feedback     TaskFeedback[]
-   attachments  TaskAttachment[]
-   user         User?            @relation("AssignedTasks", fields: [assigned_to_user_id], references: [user_id])
-   assigned_to_user_id Int?
+  conversation        Conversation     @relation(fields: [conversation_id], references: [conversation_id])
+  assigned_by         User             @relation("CreatedTasks", fields: [assigned_by_user_id], references: [user_id])
+  task_type           TaskType         @relation(fields: [task_type_id], references: [task_type_id])
+  priority            Priority         @relation(fields: [priority_id], references: [priority_id])
+  status              Status           @relation(fields: [status_id], references: [status_id])
+  assignments         TaskAssignment[]
+  updates             TaskUpdate[]
+  feedback            TaskFeedback[]
+  attachments         TaskAttachment[]
+  user                User?            @relation("AssignedTasks", fields: [assigned_to_user_id], references: [user_id])
+  assigned_to_user_id Int?
 
-   @@map("tasks")
+  @@map("tasks")
 }
 
 model TaskAssignment {
@@ -920,25 +959,25 @@ model AuditLog {
 }
 
 model PasswordResetToken {
-  id           Int      @id @default(autoincrement())
-  userId       Int
-  token        String   @unique
-  expiresAt    DateTime
-  used         Boolean  @default(false)
-  createdAt    DateTime @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime @updatedAt @db.Timestamp(6)
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
 
   // Relations
-  user         User     @relation("PasswordResetTokens", fields: [userId], references: [user_id])
+  user User @relation("PasswordResetTokens", fields: [userId], references: [user_id])
 
   @@map("password_reset_tokens")
 }
 
 model PasswordHistory {
-  id          Int      @id @default(autoincrement())
-  user_id     Int
-  password    String   @db.Text
-  created_at  DateTime @default(now()) @db.Timestamp(6)
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  password   String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
   user User @relation(fields: [user_id], references: [user_id])

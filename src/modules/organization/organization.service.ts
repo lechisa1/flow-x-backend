@@ -273,23 +273,23 @@ export class OrganizationService {
   ): Promise<OrgNodeResponseDto> {
     await this.findNode(nodeId);
 
-     // Check for duplicate name at same level
-     if (updateOrgNodeDto.node_name) {
-       const node = await this.prisma.organizationalStructure.findUnique({
-         where: { org_node_id: nodeId },
-       });
+    // Check for duplicate name at same level
+    if (updateOrgNodeDto.node_name) {
+      const node = await this.prisma.organizationalStructure.findUnique({
+        where: { org_node_id: nodeId },
+      });
 
-       if (!node) {
-         throw new NotFoundException(`Node ${nodeId} not found`);
-       }
+      if (!node) {
+        throw new NotFoundException(`Node ${nodeId} not found`);
+      }
 
-       const existingNode = await this.prisma.organizationalStructure.findFirst({
-         where: {
-           node_name: updateOrgNodeDto.node_name,
-           parent_node_id: node.parent_node_id,
-           org_node_id: { not: nodeId },
-         },
-       });
+      const existingNode = await this.prisma.organizationalStructure.findFirst({
+        where: {
+          node_name: updateOrgNodeDto.node_name,
+          parent_node_id: node.parent_node_id,
+          org_node_id: { not: nodeId },
+        },
+      });
 
       if (existingNode) {
         throw new ConflictException(
