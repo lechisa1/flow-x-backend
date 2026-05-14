@@ -15,6 +15,7 @@ datasource db {
 
 model User {
   user_id         Int       @id @default(autoincrement())
+  // user_id String @id @default(uuid()) @db.Uuid
   full_name       String    @db.VarChar(100)
   email           String    @unique @db.VarChar(100)
   password        String    @db.Text
@@ -68,6 +69,10 @@ model User {
   chat_requests_to          ChatRequest[]             @relation("ChatRequestToUser")
   blocked_by                BlockedUser[]             @relation("BlockedUserBlocker")
   blocked_users             BlockedUser[]             @relation("BlockedUserBlocked")
+  resourceVersions          ResourceVersion[]
+  resourceFavorites         ResourceFavorite[]
+  resourceComments          ResourceComment[]
+  resourceReviews           ResourceReview[]
 
   @@map("users")
 }
@@ -324,29 +329,29 @@ model ConversationType {
 }
 
 model Conversation {
-   conversation_id      Int      @id @default(autoincrement())
-   title                String   @db.VarChar(200)
-   initiator_user_id    Int
-   org_node_id          Int?
-   conversation_type_id Int
-   is_active            Boolean  @default(true)
-   created_at           DateTime @default(now()) @db.Timestamp(6)
-   updated_at           DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  conversation_id      Int      @id @default(autoincrement())
+  title                String   @db.VarChar(200)
+  initiator_user_id    Int
+  org_node_id          Int?
+  conversation_type_id Int
+  is_active            Boolean  @default(true)
+  created_at           DateTime @default(now()) @db.Timestamp(6)
+  updated_at           DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
-   // Relations
-   initiator         User                      @relation("InitiatedConversations", fields: [initiator_user_id], references: [user_id])
-   org_node          OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
-   conversation_type ConversationType          @relation(fields: [conversation_type_id], references: [conversation_type_id])
-   participants      ConversationParticipant[]
-   messages          Message[]
-   pinned_by_users   PinnedConversation[]
-   tasks             Task[]
-    user              User?                     @relation("ConversationUser", fields: [userUser_id], references: [user_id])
-    userUser_id       Int?
-   chatRequests      ChatRequest[] @relation("ChatRequestConversation")
+  // Relations
+  initiator         User                      @relation("InitiatedConversations", fields: [initiator_user_id], references: [user_id])
+  org_node          OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
+  conversation_type ConversationType          @relation(fields: [conversation_type_id], references: [conversation_type_id])
+  participants      ConversationParticipant[]
+  messages          Message[]
+  pinned_by_users   PinnedConversation[]
+  tasks             Task[]
+  user              User?                     @relation("ConversationUser", fields: [userUser_id], references: [user_id])
+  userUser_id       Int?
+  chatRequests      ChatRequest[]             @relation("ChatRequestConversation")
 
-   @@map("conversations")
- }
+  @@map("conversations")
+}
 
 model ChatRequest {
   request_id      Int       @id @default(autoincrement())
@@ -567,6 +572,7 @@ model File {
   notice_attachments  NoticeAttachment[]
   forum_attachments   ForumAttachment[]
   resources           Resource[]
+  resourceVersions    ResourceVersion[]
 
   @@map("files")
 }
@@ -781,18 +787,9 @@ model ForumAttachment {
 }
 
 // =====================================================
-// 9. RESOURCE MANAGEMENT
 // =====================================================
-
-model ResourceCategory {
-  category_id   Int    @id @default(autoincrement())
-  category_name String @unique @db.VarChar(50)
-
-  // Relations
-  resources ResourceCategoryMapping[]
-
-  @@map("resource_categories")
-}
+// RESOURCE MANAGEMENT MODULE
+// =====================================================
 
 model Resource {
   resource_id         Int       @id @default(autoincrement())
@@ -802,7 +799,11 @@ model Resource {
   uploaded_by_user_id Int
   org_node_id         Int?
   download_count      Int       @default(0)
+  view_count          Int       @default(0)
+  rating_avg          Float     @default(0)
+  rating_count        Int       @default(0)
   is_active           Boolean   @default(true)
+  is_featured         Boolean   @default(false)
   deleted_at          DateTime? @db.Timestamp(6)
   created_at          DateTime  @default(now()) @db.Timestamp(6)
   updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
@@ -812,9 +813,52 @@ model Resource {
   uploaded_by User                      @relation("UploadedResources", fields: [uploaded_by_user_id], references: [user_id])
   org_node    OrganizationalStructure?  @relation(fields: [org_node_id], references: [org_node_id])
   categories  ResourceCategoryMapping[]
+  tags        ResourceTagMapping[]
+  versions    ResourceVersion[]
+  favorites   ResourceFavorite[]
+  comments    ResourceComment[]
   access_logs ResourceAccessLog[]
+  reviews     ResourceReview[]
 
+  @@index([title])
+  @@index([uploaded_by_user_id])
+  @@index([org_node_id])
+  @@index([is_active])
   @@map("resources")
+}
+
+model ResourceCategory {
+  category_id   Int      @id @default(autoincrement())
+  category_name String   @unique @db.VarChar(100)
+  description   String?  @db.Text
+  parent_id     Int?     @db.Integer
+  icon          String?  @db.VarChar(50)
+  color         String?  @db.VarChar(7)
+  sort_order    Int      @default(0)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+
+  // Self-relation for hierarchical categories
+  parent   ResourceCategory?  @relation("CategoryHierarchy", fields: [parent_id], references: [category_id])
+  children ResourceCategory[] @relation("CategoryHierarchy")
+
+  // Relations
+  resources ResourceCategoryMapping[]
+
+  @@index([parent_id])
+  @@map("resource_categories")
+}
+
+model ResourceTag {
+  tag_id      Int      @id @default(autoincrement())
+  tag_name    String   @unique @db.VarChar(50)
+  usage_count Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  resources ResourceTagMapping[]
+
+  @@map("resource_tags")
 }
 
 model ResourceCategoryMapping {
@@ -830,17 +874,106 @@ model ResourceCategoryMapping {
   @@map("resource_category_mapping")
 }
 
+model ResourceTagMapping {
+  mapping_id  Int @id @default(autoincrement())
+  resource_id Int
+  tag_id      Int
+
+  // Relations
+  resource Resource    @relation(fields: [resource_id], references: [resource_id])
+  tag      ResourceTag @relation(fields: [tag_id], references: [tag_id])
+
+  @@unique([resource_id, tag_id])
+  @@map("resource_tag_mapping")
+}
+
+model ResourceVersion {
+  version_id     Int      @id @default(autoincrement())
+  resource_id    Int
+  version_number Int
+  file_id        Int
+  change_notes   String?  @db.Text
+  created_by     Int
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  resource Resource @relation(fields: [resource_id], references: [resource_id])
+  file     File     @relation(fields: [file_id], references: [file_id])
+  creator  User     @relation(fields: [created_by], references: [user_id])
+
+  @@unique([resource_id, version_number])
+  @@index([resource_id])
+  @@map("resource_versions")
+}
+
+model ResourceFavorite {
+  favorite_id Int      @id @default(autoincrement())
+  resource_id Int
+  user_id     Int
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  resource Resource @relation(fields: [resource_id], references: [resource_id])
+  user     User     @relation(fields: [user_id], references: [user_id])
+
+  @@unique([resource_id, user_id])
+  @@map("resource_favorites")
+}
+
+model ResourceComment {
+  comment_id  Int      @id @default(autoincrement())
+  resource_id Int
+  user_id     Int
+  parent_id   Int?
+  content     String   @db.Text
+  is_edited   Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  resource Resource          @relation(fields: [resource_id], references: [resource_id])
+  user     User              @relation(fields: [user_id], references: [user_id])
+  parent   ResourceComment?  @relation("CommentThread", fields: [parent_id], references: [comment_id])
+  replies  ResourceComment[] @relation("CommentThread")
+
+  @@index([resource_id])
+  @@map("resource_comments")
+}
+
+model ResourceReview {
+  review_id   Int      @id @default(autoincrement())
+  resource_id Int
+  user_id     Int
+  rating      Int      @db.SmallInt
+  review_text String?  @db.Text
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  resource Resource @relation(fields: [resource_id], references: [resource_id])
+  user     User     @relation(fields: [user_id], references: [user_id])
+
+  @@unique([resource_id, user_id])
+  @@index([resource_id])
+  @@map("resource_reviews")
+}
+
 model ResourceAccessLog {
   log_id      Int      @id @default(autoincrement())
   resource_id Int
   user_id     Int
-  action      String   @db.VarChar(20)
+  action      String   @db.VarChar(20) // view, download, preview
+  ip_address  String?  @db.VarChar(45)
+  user_agent  String?  @db.Text
   accessed_at DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
   resource Resource @relation(fields: [resource_id], references: [resource_id])
   user     User     @relation(fields: [user_id], references: [user_id])
 
+  @@index([resource_id])
+  @@index([user_id])
+  @@index([accessed_at])
   @@map("resource_access_logs")
 }
 

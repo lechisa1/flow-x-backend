@@ -116,6 +116,17 @@ async function main() {
     { resource: 'chat', action: 'request' },
     { resource: 'chat', action: 'respond' },
     { resource: 'chat', action: 'block' },
+    { resource: 'chat', action: 'unblock' },
+    { resource: 'chat', action: 'pin' },
+    { resource: 'chat', action: 'unpin' },
+    { resource: 'chat', action: 'delete' },
+    // Resource management permissions
+    { resource: 'resources', action: 'create' },
+    { resource: 'resources', action: 'read' },
+    { resource: 'resources', action: 'update' },
+    { resource: 'resources', action: 'delete' },
+    { resource: 'resources', action: 'download' },
+    { resource: 'resources', action: 'manage_categories' },
   ];
 
   for (const perm of permissions) {
@@ -202,7 +213,47 @@ async function main() {
       create: status,
     });
   }
+  // Default resource categories
+  const resourceCategories = [
+    {
+      category_name: 'Policies',
+      description: 'Company policies and procedures',
+      icon: '📋',
+      sort_order: 1,
+    },
+    {
+      category_name: 'Guidelines',
+      description: 'Best practices and guidelines',
+      icon: '📖',
+      sort_order: 2,
+    },
+    {
+      category_name: 'Templates',
+      description: 'Document and code templates',
+      icon: '📄',
+      sort_order: 3,
+    },
+    {
+      category_name: 'Technical Docs',
+      description: 'Technical documentation',
+      icon: '⚙️',
+      sort_order: 4,
+    },
+    {
+      category_name: 'Standards',
+      description: 'Organizational standards',
+      icon: '⭐',
+      sort_order: 5,
+    },
+  ];
 
+  for (const category of resourceCategories) {
+    await prisma.resourceCategory.upsert({
+      where: { category_name: category.category_name },
+      update: {},
+      create: category,
+    });
+  }
   // Create priorities
   const priorities = [
     {

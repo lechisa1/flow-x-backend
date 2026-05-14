@@ -18,6 +18,7 @@ import { OrganizationModule } from './modules/organization/organization.module';
 import { PrioritiesModule } from './modules/priorities/priorities.module';
 import { NoticesModule } from './modules/notices/notices.module';
 import { CommunicationModule } from './modules/communication/communication.module';
+import { ResourcesModule } from './modules/resources/resources.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -50,6 +51,7 @@ import { CommunicationModule } from './modules/communication/communication.modul
     PrioritiesModule,
     NoticesModule,
     CommunicationModule,
+    ResourcesModule,
   ],
   providers: [
     PrismaService,

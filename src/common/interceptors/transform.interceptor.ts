@@ -27,14 +27,17 @@ export class TransformInterceptor<T> implements NestInterceptor<
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    return next.handle().pipe(
-      map((data) => ({
-        statusCode: response.statusCode,
-        message: data?.message || 'Success',
-        data: data?.data || data,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      })),
-    );
+return next.handle().pipe(
+       map((data) => ({
+         statusCode: response.statusCode,
+         message: data?.message || 'Success',
+         data: data?.data || data,
+         timestamp: new Date().toISOString(),
+         path: request.url,
+       })),
+       map((responseBody) => JSON.parse(JSON.stringify(responseBody, (_, v) =>
+         typeof v === 'bigint' ? v.toString() : v,
+       ))),
+     );
   }
 }
