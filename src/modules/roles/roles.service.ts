@@ -18,7 +18,7 @@ export class RolesService {
 
   async create(
     createRoleDto: CreateRoleDto,
-    createdBy: number,
+    createdBy: string,
   ): Promise<RoleResponseDto> {
     // Check if role already exists
     const existingRole = await this.prisma.role.findUnique({
@@ -122,7 +122,7 @@ export class RolesService {
     };
   }
 
-  async findOne(roleId: number): Promise<RoleResponseDto> {
+  async findOne(roleId: string): Promise<RoleResponseDto> {
     const role = await this.prisma.role.findUnique({
       where: { role_id: roleId },
       include: {
@@ -163,9 +163,9 @@ export class RolesService {
   }
 
   async update(
-    roleId: number,
+    roleId: string,
     updateRoleDto: UpdateRoleDto,
-    updatedBy: number,
+    updatedBy: string,
   ): Promise<RoleResponseDto> {
     // Check if role exists
     await this.findOne(roleId);
@@ -261,8 +261,8 @@ export class RolesService {
   }
 
   async delete(
-    roleId: number,
-    deletedBy: number,
+    roleId: string,
+    deletedBy: string,
   ): Promise<{ message: string }> {
     const role = await this.findOne(roleId);
 
@@ -311,7 +311,7 @@ export class RolesService {
   }
 
   async assignPermissions(
-    roleId: number,
+    roleId: string,
     assignPermissionDto: AssignPermissionDto,
   ): Promise<RoleResponseDto> {
     await this.findOne(roleId);
@@ -319,7 +319,7 @@ export class RolesService {
     // Verify all permissions exist
     const permissions = await this.prisma.permission.findMany({
       where: {
-        permission_id: { in: assignPermissionDto.permission_ids },
+        permission_id: { in: assignPermissionDto.permission_ids as string[] },
       },
     });
 
@@ -336,7 +336,7 @@ export class RolesService {
     // Create role-permission mappings
     const data = assignPermissionDto.permission_ids.map((permissionId) => ({
       role_id: roleId,
-      permission_id: permissionId,
+      permission_id: permissionId as string,
     }));
 
     await this.prisma.rolePermission.createMany({
@@ -350,8 +350,8 @@ export class RolesService {
   }
 
   async removePermission(
-    roleId: number,
-    permissionId: number,
+    roleId: string,
+    permissionId: string,
   ): Promise<RoleResponseDto> {
     await this.findOne(roleId);
 
@@ -384,12 +384,12 @@ export class RolesService {
     return this.findOne(roleId);
   }
 
-  async getRolePermissions(roleId: number) {
+  async getRolePermissions(roleId: string) {
     const role = await this.findOne(roleId);
     return role.permissions;
   }
 
-  async getUsersWithRole(roleId: number, page: number = 1, limit: number = 10) {
+  async getUsersWithRole(roleId: string, page: number = 1, limit: number = 10) {
     await this.findOne(roleId);
 
     const skip = (page - 1) * limit;
@@ -462,10 +462,10 @@ export class RolesService {
   }
 
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {

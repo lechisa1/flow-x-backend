@@ -5,7 +5,7 @@ import {
   MaxLength,
   IsArray,
   ArrayUnique,
-  IsInt,
+  IsUUID,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -26,12 +26,12 @@ export class UpdateRoleDto {
   description?: string;
 
   @ApiPropertyOptional({
-    example: [1, 2, 3, 4],
+    example: ['123e4567-e89b-12d3-a456-426614174000', '123e4567-e89b-12d3-a456-426614174001'],
     description: 'Replace existing permissions with these',
   })
   @IsOptional()
   @IsArray()
   @ArrayUnique()
-  @IsInt({ each: true })
-  permission_ids?: number[];
+  @IsUUID('4', { each: true })
+  permission_ids?: string[];
 }

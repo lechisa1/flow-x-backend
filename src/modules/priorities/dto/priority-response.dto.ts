@@ -5,7 +5,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class PriorityResponseDto {
   @Expose()
   @ApiProperty()
-  priority_id: number;
+  priority_id: string;
 
   @Expose()
   @ApiProperty()

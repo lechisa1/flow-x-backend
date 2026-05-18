@@ -8,7 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto, UsersQueryDto } from './dto';
@@ -16,19 +16,14 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
   // @Roles('admin', 'manager')
@@ -50,7 +45,7 @@ export class UsersController {
   @Get(':id')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Get user by ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.usersService.findOne(id);
   }
 
@@ -62,6 +57,7 @@ export class UsersController {
     @CurrentUser() currentUser: any,
   ) {
     createUserDto.assigned_by = currentUser.user_id;
+
     return this.usersService.create(createUserDto);
   }
 
@@ -69,11 +65,12 @@ export class UsersController {
   @Roles('admin')
   @ApiOperation({ summary: 'Update user' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() currentUser: any,
   ) {
     updateUserDto.assigned_by = currentUser.user_id;
+
     return this.usersService.update(id, updateUserDto);
   }
 
@@ -81,7 +78,7 @@ export class UsersController {
   @Roles('admin')
   @ApiOperation({ summary: 'Delete user (soft delete)' })
   async delete(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() currentUser: any,
   ) {
     return this.usersService.delete(id, currentUser.user_id);
@@ -91,8 +88,8 @@ export class UsersController {
   @Roles('admin')
   @ApiOperation({ summary: 'Assign role to user' })
   async assignRole(
-    @Param('id', ParseIntPipe) id: number,
-    @Param('roleId', ParseIntPipe) roleId: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('roleId', new ParseUUIDPipe()) roleId: string,
     @CurrentUser() currentUser: any,
   ) {
     return this.usersService.assignRole(id, roleId, currentUser.user_id);
@@ -102,8 +99,8 @@ export class UsersController {
   @Roles('admin')
   @ApiOperation({ summary: 'Remove role from user' })
   async removeRole(
-    @Param('id', ParseIntPipe) id: number,
-    @Param('roleId', ParseIntPipe) roleId: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('roleId', new ParseUUIDPipe()) roleId: string,
   ) {
     return this.usersService.removeRole(id, roleId);
   }

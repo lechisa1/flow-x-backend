@@ -1,10 +1,11 @@
 import {
   IsString,
   IsOptional,
-  IsInt,
+  IsUUID,
   IsHexColor,
   MinLength,
   MaxLength,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
@@ -18,12 +19,16 @@ export class CreateCategoryDto {
   @ApiPropertyOptional({ example: 'Company policies and procedures' })
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   description?: string;
 
-  @ApiPropertyOptional({ example: 1, description: 'Parent category ID' })
+  @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Parent category ID (UUID)',
+  })
   @IsOptional()
-  @IsInt()
-  parent_id?: number;
+  @IsUUID()
+  parent_id?: string;
 
   @ApiPropertyOptional({ example: '📄', description: 'Icon emoji or URL' })
   @IsOptional()

@@ -42,7 +42,7 @@ export class PermissionsController {
   @Get(':id')
   @Permissions('permissions:read')
   @ApiOperation({ summary: 'Get permission by ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id') id: string) {
     return this.permissionsService.findOne(id);
   }
 

@@ -6,7 +6,7 @@ export class PermissionCheckService {
   constructor(private prisma: PrismaService) {}
 
   async userHasPermission(
-    userId: number,
+    userId: string,
     permissionName: string,
   ): Promise<boolean> {
     const userRoles = await this.prisma.userRole.findMany({
@@ -32,7 +32,7 @@ export class PermissionCheckService {
   }
 
   async userHasAnyPermission(
-    userId: number,
+    userId: string,
     permissionNames: string[],
   ): Promise<boolean> {
     const userRoles = await this.prisma.userRole.findMany({
@@ -59,7 +59,7 @@ export class PermissionCheckService {
     return permissionNames.some((p) => userPermissions.has(p));
   }
 
-  async getUserPermissions(userId: number): Promise<string[]> {
+  async getUserPermissions(userId: string): Promise<string[]> {
     const userRoles = await this.prisma.userRole.findMany({
       where: { user_id: userId },
       include: {

@@ -1,28 +1,27 @@
 import {
   IsString,
   IsOptional,
-  IsInt,
-  IsDateString,
   IsArray,
-  ArrayNotEmpty,
   IsIn,
   MinLength,
   MaxLength,
   ValidateNested,
+  IsUUID,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class NoticeTargetItemDto {
-  @ApiPropertyOptional({ description: 'Organization node ID' })
+  @ApiPropertyOptional({ description: 'Organization node ID (UUID)' })
   @IsOptional()
-  @IsInt()
-  org_node_id?: number;
+  @IsUUID()
+  org_node_id?: string;
 
-  @ApiPropertyOptional({ description: 'Role ID' })
+  @ApiPropertyOptional({ description: 'Role ID (UUID)' })
   @IsOptional()
-  @IsInt()
-  role_id?: number;
+  @IsUUID()
+  role_id?: string;
 
   @ApiProperty({ enum: ['org_node', 'role', 'all'] })
   @IsString()
@@ -48,10 +47,9 @@ export class CreateNoticeDto {
   @MinLength(10)
   content: string;
 
-  @ApiPropertyOptional({ example: 1, description: 'Notice category ID' })
-  @IsOptional()
-  @IsInt()
-  category_id?: number;
+  @ApiProperty({ example: 'uuid', description: 'Notice category ID' })
+  @IsUUID()
+  category_id!: string;
 
   @ApiPropertyOptional({
     example: 'general',
@@ -89,9 +87,12 @@ export class CreateNoticeDto {
   @Type(() => NoticeTargetItemDto)
   targets?: NoticeTargetItemDto[];
 
-  @ApiPropertyOptional({ type: [Number], description: 'Attachment file IDs' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Attachment file IDs (UUIDs)',
+  })
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  attachment_ids?: number[];
+  @IsUUID('4', { each: true })
+  attachment_ids?: string[];
 }

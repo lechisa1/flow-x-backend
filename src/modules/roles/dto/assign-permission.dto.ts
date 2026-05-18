@@ -1,14 +1,13 @@
-import { IsArray, ArrayNotEmpty, ArrayUnique, IsInt } from 'class-validator';
+import { IsArray, ArrayNotEmpty, ArrayUnique } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AssignPermissionDto {
   @ApiProperty({
-    example: [1, 2, 3],
+    example: ['123e4567-e89b-12d3-a456-426614174000', '123e4567-e89b-12d3-a456-426614174001'],
     description: 'Permission IDs to assign to role',
   })
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
-  @IsInt({ each: true })
-  permission_ids: number[];
+  permission_ids: string[];
 }

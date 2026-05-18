@@ -5,22 +5,22 @@ export interface AuthResponse {
   token_type: string;
   expires_in: number;
   user: {
-    id: number;
+    id: string;
     email: string;
     full_name: string;
     profile_image: string | null;
-    roles: Array<{ id: number; name: string }>;
+    roles: Array<{ id: string; name: string }>;
     permissions: string[];
   };
 }
 
 export interface JwtPayload {
-  sub: number;
+  sub: string;
   email: string;
 }
 
 export interface UserSession {
-  user_id: number;
+  user_id: string;
   email: string;
   full_name: string;
   roles: string[];

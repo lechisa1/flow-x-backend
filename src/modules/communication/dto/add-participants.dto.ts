@@ -1,19 +1,19 @@
-import { IsArray, ArrayNotEmpty, IsInt } from 'class-validator';
+import { IsArray, ArrayNotEmpty, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AddParticipantsDto {
   @ApiProperty({
-    type: [Number],
-    description: 'User IDs to add to conversation',
+    type: [String],
+    description: 'User IDs to add to conversation (UUIDs)',
   })
   @IsArray()
   @ArrayNotEmpty()
-  @IsInt({ each: true })
-  user_ids: number[];
+  @IsUUID('all', { each: true })
+  user_ids: string[];
 }
 
 export class RemoveParticipantDto {
-  @ApiProperty({ example: 10, description: 'User ID to remove' })
-  @IsInt()
-  user_id: number;
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'User ID to remove' })
+  @IsUUID()
+  user_id: string;
 }

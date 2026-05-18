@@ -27,7 +27,7 @@ export class ResourcesService {
   // ==================== Resource CRUD ====================
 
   async create(
-    userId: number,
+    userId: string,
     createDto: CreateResourceDto,
     file?: Express.Multer.File,
   ): Promise<ResourceResponseDto> {
@@ -147,7 +147,7 @@ export class ResourcesService {
     return this.findOne(resource.resource_id, userId);
   }
 
-  async findAll(userId: number, filterDto: ResourceFilterDto) {
+  async findAll(userId: string, filterDto: ResourceFilterDto) {
     const page = filterDto.page || 1;
     const limit = filterDto.limit || 20;
     const skip = (page - 1) * limit;
@@ -280,8 +280,8 @@ export class ResourcesService {
   }
 
   async findOne(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
   ): Promise<ResourceResponseDto> {
     const resource = await this.prisma.resource.findUnique({
       where: { resource_id: resourceId, deleted_at: null },
@@ -397,17 +397,17 @@ export class ResourcesService {
 
     return new ResourceResponseDto({
       ...resource,
-      is_favorite: resource.favorites.length > 0,
-      user_rating: resource.reviews[0]?.rating,
-      categories: resource.categories.map((c) => c.category),
-      tags: resource.tags.map((t) => t.tag),
-      version_number: resource.versions[0]?.version_number,
+      is_favorite: resource.favorites && resource.favorites.length > 0,
+      user_rating: resource.reviews && resource.reviews.length > 0 ? resource.reviews[0].rating : undefined,
+      categories: resource.categories && resource.categories.map((c) => c.category),
+      tags: resource.tags && resource.tags.map((t) => t.tag),
+      version_number: resource.versions && resource.versions.length > 0 ? resource.versions[0].version_number : undefined,
     });
   }
 
   async update(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
     updateDto: UpdateResourceDto,
   ): Promise<ResourceResponseDto> {
     const resource = await this.prisma.resource.findUnique({
@@ -438,13 +438,13 @@ export class ResourcesService {
         _max: { version_number: true },
       });
 
-      const newVersionNumber = (currentMaxVersion._max.version_number || 0) + 1;
+      const newVersionNumber = (currentMaxVersion._max?.version_number || 0) + 1;
 
       await this.prisma.resourceVersion.create({
         data: {
           resource_id: resourceId,
           version_number: newVersionNumber,
-          file_id: updateDto.file_id,
+          file_id: updateDto.file_id as string,
           change_notes: updateDto.change_notes || `Version ${newVersionNumber}`,
           created_by: userId,
         },
@@ -534,8 +534,8 @@ export class ResourcesService {
   }
 
   async delete(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
   ): Promise<{ message: string }> {
     const resource = await this.prisma.resource.findUnique({
       where: { resource_id: resourceId },
@@ -577,8 +577,8 @@ export class ResourcesService {
   // ==================== Download Tracking ====================
 
   async downloadResource(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
   ): Promise<{ download_url: string }> {
     const resource = await this.findOne(resourceId, userId);
 
@@ -603,8 +603,8 @@ export class ResourcesService {
   // ==================== Favorites ====================
 
   async toggleFavorite(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
   ): Promise<{ is_favorite: boolean }> {
     const existing = await this.prisma.resourceFavorite.findUnique({
       where: {
@@ -636,7 +636,7 @@ export class ResourcesService {
     }
   }
 
-  async getUserFavorites(userId: number, page: number = 1, limit: number = 20) {
+  async getUserFavorites(userId: string, page: number = 1, limit: number = 20) {
     const skip = (page - 1) * limit;
 
     const favorites = await this.prisma.resourceFavorite.findMany({
@@ -667,11 +667,14 @@ export class ResourcesService {
     });
 
     return {
-      data: favorites.map((f) => new ResourceResponseDto({
-        ...f.resource,
-        categories: f.resource.categories.map((c) => c.category),
-        tags: f.resource.tags.map((t) => t.tag),
-      })),
+      data: favorites.map(
+        (f) =>
+          new ResourceResponseDto({
+            ...f.resource,
+            categories: f.resource.categories.map((c) => c.category),
+            tags: f.resource.tags.map((t) => t.tag),
+          }),
+      ),
       meta: {
         page,
         limit,
@@ -684,8 +687,8 @@ export class ResourcesService {
   // ==================== Comments ====================
 
   async addComment(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
     commentDto: AddCommentDto,
   ) {
     await this.findOne(resourceId, userId);
@@ -694,7 +697,7 @@ export class ResourcesService {
       data: {
         resource_id: resourceId,
         user_id: userId,
-        parent_id: commentDto.parent_id,
+        parent_id: commentDto.parent_id as string | null,
         content: commentDto.content,
       },
       include: {
@@ -713,8 +716,8 @@ export class ResourcesService {
   }
 
   async getComments(
-    resourceId: number,
-    userId: number,
+    resourceId: string,
+    userId: string,
     page: number = 1,
     limit: number = 20,
   ) {
@@ -771,7 +774,7 @@ export class ResourcesService {
 
   // ==================== Reviews & Ratings ====================
 
-  async addReview(resourceId: number, userId: number, reviewDto: AddReviewDto) {
+  async addReview(resourceId: string, userId: string, reviewDto: AddReviewDto) {
     await this.findOne(resourceId, userId);
 
     const existing = await this.prisma.resourceReview.findUnique({
@@ -815,13 +818,13 @@ export class ResourcesService {
       _count: { rating: true },
     });
 
-    await this.prisma.resource.update({
-      where: { resource_id: resourceId },
-      data: {
-        rating_avg: avgRating._avg.rating || 0,
-        rating_count: avgRating._count.rating || 0,
-      },
-    });
+     await this.prisma.resource.update({
+       where: { resource_id: resourceId },
+       data: {
+         rating_avg: avgRating._avg?.rating || 0,
+         rating_count: avgRating._count?.rating || 0,
+       },
+     });
 
     return review;
   }
@@ -890,14 +893,14 @@ export class ResourcesService {
     return categories;
   }
 
-  async updateCategory(categoryId: number, updateDto: UpdateCategoryDto) {
+  async updateCategory(categoryId: string, updateDto: UpdateCategoryDto) {
     return this.prisma.resourceCategory.update({
       where: { category_id: categoryId },
       data: updateDto,
     });
   }
 
-  async deleteCategory(categoryId: number) {
+  async deleteCategory(categoryId: string) {
     const category = await this.prisma.resourceCategory.findUnique({
       where: { category_id: categoryId },
       include: { resources: { take: 1 } },
@@ -970,10 +973,10 @@ export class ResourcesService {
   // ==================== Helper Methods ====================
 
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {

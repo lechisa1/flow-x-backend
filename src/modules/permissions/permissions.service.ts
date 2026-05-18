@@ -58,7 +58,7 @@ export class PermissionsService {
     };
   }
 
-  async findOne(permissionId: number) {
+  async findOne(permissionId: string) {
     const permission = await this.prisma.permission.findUnique({
       where: { permission_id: permissionId },
       include: {

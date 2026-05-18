@@ -14,8 +14,7 @@ datasource db {
 // =====================================================
 
 model User {
-  user_id         Int       @id @default(autoincrement())
-  // user_id String @id @default(uuid()) @db.Uuid
+  user_id         String    @id @default(uuid())
   full_name       String    @db.VarChar(100)
   email           String    @unique @db.VarChar(100)
   password        String    @db.Text
@@ -54,7 +53,6 @@ model User {
   experience                UserExperience[]
   skills                    UserSkill[]
   conversations             Conversation[]            @relation("InitiatedConversations")
-  conversation_user_links   Conversation[]            @relation("ConversationUser")
   conversationParticipants  ConversationParticipant[]
   messageReads              MessageRead[]
   messageReactions          MessageReaction[]
@@ -78,7 +76,7 @@ model User {
 }
 
 model Role {
-  role_id     Int      @id @default(autoincrement())
+  role_id     String   @id @default(uuid())
   role_name   String   @unique @db.VarChar(50)
   description String?  @db.Text
   created_at  DateTime @default(now()) @db.Timestamp(6)
@@ -92,7 +90,7 @@ model Role {
 }
 
 model Permission {
-  permission_id   Int     @id @default(autoincrement())
+  permission_id   String  @id @default(uuid())
   permission_name String  @unique @db.VarChar(100)
   resource        String? @db.VarChar(100)
   action          String? @db.VarChar(50)
@@ -105,10 +103,10 @@ model Permission {
 }
 
 model UserRole {
-  user_role_id Int      @id @default(autoincrement())
-  user_id      Int
-  role_id      Int
-  assigned_by  Int?
+  user_role_id String   @id @default(uuid())
+  user_id      String
+  role_id      String
+  assigned_by  String?
   assigned_at  DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -121,9 +119,9 @@ model UserRole {
 }
 
 model RolePermission {
-  rp_id         Int @id @default(autoincrement())
-  role_id       Int
-  permission_id Int
+  rp_id         String @id @default(uuid())
+  role_id       String
+  permission_id String
 
   // Relations
   role       Role       @relation(fields: [role_id], references: [role_id])
@@ -134,8 +132,8 @@ model RolePermission {
 }
 
 model UserSession {
-  session_id  Int      @id @default(autoincrement())
-  user_id     Int
+  session_id  String   @id @default(uuid())
+  user_id     String
   token       String   @db.Text
   device_info String?  @db.Text
   ip_address  String?  @db.VarChar(45)
@@ -149,10 +147,10 @@ model UserSession {
 }
 
 model UserActivationLog {
-  log_id       Int      @id @default(autoincrement())
-  user_id      Int
+  log_id       String   @id @default(uuid())
+  user_id      String
   action       String   @db.VarChar(20)
-  performed_by Int?
+  performed_by String?
   reason       String?  @db.Text
   timestamp    DateTime @default(now()) @db.Timestamp(6)
 
@@ -163,8 +161,8 @@ model UserActivationLog {
 }
 
 model UserPresence {
-  presence_id     Int      @id @default(autoincrement())
-  user_id         Int      @unique
+  presence_id     String   @id @default(uuid())
+  user_id         String   @unique
   presence_status String?  @db.VarChar(20)
   last_seen       DateTime @default(now()) @db.Timestamp(6)
   updated_at      DateTime @default(now()) @db.Timestamp(6)
@@ -176,8 +174,8 @@ model UserPresence {
 }
 
 model UserDevice {
-  device_id    Int      @id @default(autoincrement())
-  user_id      Int
+  device_id    String   @id @default(uuid())
+  user_id      String
   device_token String   @db.Text
   platform     String?  @db.VarChar(20)
   device_name  String?  @db.VarChar(100)
@@ -195,10 +193,10 @@ model UserDevice {
 // =====================================================
 
 model OrganizationalStructure {
-  org_node_id    Int                       @id @default(autoincrement())
+  org_node_id    String                    @id @default(uuid())
   node_name      String                    @db.VarChar(100)
   node_type      String                    @db.VarChar(50)
-  parent_node_id Int?
+  parent_node_id String?
   parent         OrganizationalStructure?  @relation("OrgNodeParent", fields: [parent_node_id], references: [org_node_id])
   children       OrganizationalStructure[] @relation("OrgNodeParent")
   level          Int                       @default(0)
@@ -216,7 +214,7 @@ model OrganizationalStructure {
 }
 
 model OrganizationPosition {
-  position_id    Int      @id @default(autoincrement())
+  position_id    String   @id @default(uuid())
   position_name  String   @unique @db.VarChar(100)
   description    String?  @db.Text
   hierarchy_rank Int?
@@ -229,10 +227,10 @@ model OrganizationPosition {
 }
 
 model UserAssignment {
-  assignment_id Int      @id @default(autoincrement())
-  user_id       Int
-  org_node_id   Int
-  position_id   Int
+  assignment_id String   @id @default(uuid())
+  user_id       String
+  org_node_id   String
+  position_id   String
   is_primary    Boolean  @default(false)
   is_node_head  Boolean  @default(false)
   assigned_at   DateTime @default(now()) @db.Timestamp(6)
@@ -251,7 +249,7 @@ model UserAssignment {
 // =====================================================
 
 model TaskType {
-  task_type_id Int     @id @default(autoincrement())
+  task_type_id String  @id @default(uuid())
   type_name    String  @unique @db.VarChar(50)
   description  String? @db.Text
   is_active    Boolean @default(true)
@@ -263,7 +261,7 @@ model TaskType {
 }
 
 model Priority {
-  priority_id       Int     @id @default(autoincrement())
+  priority_id       String  @id @default(uuid())
   priority_level    String  @unique @db.VarChar(20)
   color_code        String? @db.VarChar(7)
   response_time_hrs Int?
@@ -276,7 +274,7 @@ model Priority {
 }
 
 model Status {
-  status_id   Int     @id @default(autoincrement())
+  status_id   String  @id @default(uuid())
   status_name String  @unique @db.VarChar(50)
   category    String? @db.VarChar(30)
   is_active   Boolean @default(true)
@@ -289,7 +287,7 @@ model Status {
 }
 
 model LookupCategory {
-  category_id   Int     @id @default(autoincrement())
+  category_id   String  @id @default(uuid())
   category_name String  @unique @db.VarChar(50)
   description   String? @db.Text
 
@@ -300,8 +298,8 @@ model LookupCategory {
 }
 
 model LookupValue {
-  value_id    Int     @id @default(autoincrement())
-  category_id Int
+  value_id    String  @id @default(uuid())
+  category_id String // Changed from Int to String
   value_name  String  @db.VarChar(100)
   sort_order  Int     @default(0)
   is_active   Boolean @default(true)
@@ -318,7 +316,7 @@ model LookupValue {
 // =====================================================
 
 model ConversationType {
-  conversation_type_id Int     @id @default(autoincrement())
+  conversation_type_id String  @id @default(uuid())
   type_name            String  @unique @db.VarChar(50)
   description          String? @db.Text
 
@@ -329,11 +327,11 @@ model ConversationType {
 }
 
 model Conversation {
-  conversation_id      Int      @id @default(autoincrement())
+  conversation_id      String   @id @default(uuid())
   title                String   @db.VarChar(200)
-  initiator_user_id    Int
-  org_node_id          Int?
-  conversation_type_id Int
+  initiator_user_id    String
+  org_node_id          String?
+  conversation_type_id String
   is_active            Boolean  @default(true)
   created_at           DateTime @default(now()) @db.Timestamp(6)
   updated_at           DateTime @default(now()) @updatedAt @db.Timestamp(6)
@@ -346,22 +344,20 @@ model Conversation {
   messages          Message[]
   pinned_by_users   PinnedConversation[]
   tasks             Task[]
-  user              User?                     @relation("ConversationUser", fields: [userUser_id], references: [user_id])
-  userUser_id       Int?
   chatRequests      ChatRequest[]             @relation("ChatRequestConversation")
 
   @@map("conversations")
 }
 
 model ChatRequest {
-  request_id      Int       @id @default(autoincrement())
-  from_user_id    Int
-  to_user_id      Int
+  request_id      String    @id @default(uuid())
+  from_user_id    String
+  to_user_id      String
   status          String    @default("pending") // pending, accepted, rejected, blocked
   message         String?
   requested_at    DateTime  @default(now()) @db.Timestamp(6)
   responded_at    DateTime? @db.Timestamp(6)
-  conversation_id Int?
+  conversation_id String?
 
   // Relations
   from_user    User          @relation("ChatRequestFromUser", fields: [from_user_id], references: [user_id])
@@ -373,9 +369,9 @@ model ChatRequest {
 }
 
 model BlockedUser {
-  block_id   Int      @id @default(autoincrement())
-  blocker_id Int
-  blocked_id Int
+  block_id   String   @id @default(uuid())
+  blocker_id String
+  blocked_id String
   reason     String?
   created_at DateTime @default(now()) @db.Timestamp(6)
 
@@ -388,9 +384,9 @@ model BlockedUser {
 }
 
 model ConversationParticipant {
-  participant_id  Int       @id @default(autoincrement())
-  conversation_id Int
-  user_id         Int
+  participant_id  String    @id @default(uuid())
+  conversation_id String
+  user_id         String
   last_read_at    DateTime? @db.Timestamp(6)
   joined_at       DateTime  @default(now()) @db.Timestamp(6)
 
@@ -403,10 +399,10 @@ model ConversationParticipant {
 }
 
 model Message {
-  message_id        Int       @id @default(autoincrement())
-  conversation_id   Int
-  sender_user_id    Int
-  parent_message_id Int?
+  message_id        String    @id @default(uuid())
+  conversation_id   String
+  sender_user_id    String
+  parent_message_id String?
   content_text      String    @db.Text
   is_edited         Boolean   @default(false)
   deleted_at        DateTime? @db.Timestamp(6)
@@ -425,9 +421,9 @@ model Message {
 }
 
 model MessageRead {
-  read_id    Int      @id @default(autoincrement())
-  message_id Int
-  user_id    Int
+  read_id    String   @id @default(uuid())
+  message_id String
+  user_id    String
   read_at    DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -439,9 +435,9 @@ model MessageRead {
 }
 
 model MessageReaction {
-  reaction_id   Int      @id @default(autoincrement())
-  message_id    Int
-  user_id       Int
+  reaction_id   String   @id @default(uuid())
+  message_id    String
+  user_id       String
   reaction_type String   @db.VarChar(20)
   reacted_at    DateTime @default(now()) @db.Timestamp(6)
 
@@ -454,9 +450,9 @@ model MessageReaction {
 }
 
 model PinnedConversation {
-  pinned_id         Int      @id @default(autoincrement())
-  conversation_id   Int
-  pinned_by_user_id Int
+  pinned_id         String   @id @default(uuid())
+  conversation_id   String
+  pinned_by_user_id String
   pinned_at         DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -472,40 +468,40 @@ model PinnedConversation {
 // =====================================================
 
 model Task {
-  task_id             Int       @id @default(autoincrement())
-  conversation_id     Int
-  assigned_by_user_id Int
-  task_type_id        Int
-  priority_id         Int
-  status_id           Int
+  task_id             String    @id @default(uuid())
+  conversation_id     String
+  assigned_by_user_id String
+  task_type_id        String
+  priority_id         String
+  status_id           String
   due_date            DateTime? @db.Date
   deliverable_summary String?   @db.Text
   completed_at        DateTime? @db.Timestamp(6)
   deleted_at          DateTime? @db.Timestamp(6)
   created_at          DateTime  @default(now()) @db.Timestamp(6)
   updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  assigned_to_user_id String?
 
   // Relations
-  conversation        Conversation     @relation(fields: [conversation_id], references: [conversation_id])
-  assigned_by         User             @relation("CreatedTasks", fields: [assigned_by_user_id], references: [user_id])
-  task_type           TaskType         @relation(fields: [task_type_id], references: [task_type_id])
-  priority            Priority         @relation(fields: [priority_id], references: [priority_id])
-  status              Status           @relation(fields: [status_id], references: [status_id])
-  assignments         TaskAssignment[]
-  updates             TaskUpdate[]
-  feedback            TaskFeedback[]
-  attachments         TaskAttachment[]
-  user                User?            @relation("AssignedTasks", fields: [assigned_to_user_id], references: [user_id])
-  assigned_to_user_id Int?
+  conversation Conversation     @relation(fields: [conversation_id], references: [conversation_id])
+  assigned_by  User             @relation("CreatedTasks", fields: [assigned_by_user_id], references: [user_id])
+  task_type    TaskType         @relation(fields: [task_type_id], references: [task_type_id])
+  priority     Priority         @relation(fields: [priority_id], references: [priority_id])
+  status       Status           @relation(fields: [status_id], references: [status_id])
+  assignments  TaskAssignment[]
+  updates      TaskUpdate[]
+  feedback     TaskFeedback[]
+  attachments  TaskAttachment[]
+  assigned_to  User?            @relation("AssignedTasks", fields: [assigned_to_user_id], references: [user_id])
 
   @@map("tasks")
 }
 
 model TaskAssignment {
-  assignment_id       Int      @id @default(autoincrement())
-  task_id             Int
-  user_id             Int
-  assigned_by_user_id Int
+  assignment_id       String   @id @default(uuid())
+  task_id             String
+  user_id             String
+  assigned_by_user_id String
   assigned_at         DateTime @default(now()) @db.Timestamp(6)
   assignment_status   String   @default("assigned") @db.VarChar(30)
 
@@ -519,9 +515,9 @@ model TaskAssignment {
 }
 
 model TaskUpdate {
-  update_id        Int      @id @default(autoincrement())
-  task_id          Int
-  user_id          Int
+  update_id        String   @id @default(uuid())
+  task_id          String
+  user_id          String
   update_text      String   @db.Text
   progress_percent Int?
   submitted_at     DateTime @default(now()) @db.Timestamp(6)
@@ -534,9 +530,9 @@ model TaskUpdate {
 }
 
 model TaskFeedback {
-  feedback_id   Int      @id @default(autoincrement())
-  task_id       Int
-  from_user_id  Int
+  feedback_id   String   @id @default(uuid())
+  task_id       String
+  from_user_id  String
   feedback_text String   @db.Text
   rating        Int?
   created_at    DateTime @default(now()) @db.Timestamp(6)
@@ -553,14 +549,14 @@ model TaskFeedback {
 // =====================================================
 
 model File {
-  file_id             Int      @id @default(autoincrement())
+  file_id             String   @id @default(uuid())
   file_name           String   @db.VarChar(255)
   original_name       String?  @db.VarChar(255)
   file_url            String   @db.Text
   mime_type           String?  @db.VarChar(100)
   file_extension      String?  @db.VarChar(20)
   file_size           BigInt?
-  uploaded_by_user_id Int
+  uploaded_by_user_id String
   storage_provider    String?  @db.VarChar(50)
   is_public           Boolean  @default(false)
   created_at          DateTime @default(now()) @db.Timestamp(6)
@@ -578,9 +574,9 @@ model File {
 }
 
 model MessageAttachment {
-  attachment_id Int      @id @default(autoincrement())
-  message_id    Int
-  file_id       Int
+  attachment_id String   @id @default(uuid())
+  message_id    String // Changed from Int to String
+  file_id       String // Changed from Int to String
   uploaded_at   DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -592,9 +588,9 @@ model MessageAttachment {
 }
 
 model TaskAttachment {
-  attachment_id Int      @id @default(autoincrement())
-  task_id       Int
-  file_id       Int
+  attachment_id String   @id @default(uuid())
+  task_id       String // Changed from Int to String
+  file_id       String // Changed from Int to String
   uploaded_at   DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -610,7 +606,7 @@ model TaskAttachment {
 // =====================================================
 
 model NoticeCategory {
-  category_id   Int    @id @default(autoincrement())
+  category_id   String @id @default(uuid())
   category_name String @unique @db.VarChar(50)
 
   // Relations
@@ -620,16 +616,16 @@ model NoticeCategory {
 }
 
 model Notice {
-  notice_id            Int       @id @default(autoincrement())
+  notice_id            String    @id @default(uuid())
   title                String    @db.VarChar(200)
   content              String    @db.Text
-  published_by_user_id Int
-  category_id          Int
+  published_by_user_id String // Changed from Int to String
+  category_id          String // Changed from Int to String
   notice_type          String?   @db.VarChar(30)
   scheduled_publish_at DateTime? @db.Timestamp(6)
   published_at         DateTime? @db.Timestamp(6)
   expires_at           DateTime? @db.Timestamp(6)
-  status_id            Int
+  status_id            String // Changed from Int to String
   deleted_at           DateTime? @db.Timestamp(6)
   created_at           DateTime  @default(now()) @db.Timestamp(6)
   updated_at           DateTime  @default(now()) @updatedAt @db.Timestamp(6)
@@ -646,11 +642,11 @@ model Notice {
 }
 
 model NoticeTarget {
-  target_id   Int    @id @default(autoincrement())
-  notice_id   Int
-  org_node_id Int?
-  role_id     Int?
-  target_type String @db.VarChar(20)
+  target_id   String  @id @default(uuid())
+  notice_id   String // Changed from Int to String
+  org_node_id String? // Changed from Int to String
+  role_id     String? // Changed from Int to String
+  target_type String  @db.VarChar(20)
 
   // Relations
   notice   Notice                   @relation(fields: [notice_id], references: [notice_id])
@@ -661,9 +657,9 @@ model NoticeTarget {
 }
 
 model NoticeAttachment {
-  attachment_id Int      @id @default(autoincrement())
-  notice_id     Int
-  file_id       Int
+  attachment_id String   @id @default(uuid())
+  notice_id     String // Changed from Int to String
+  file_id       String // Changed from Int to String
   uploaded_at   DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -674,9 +670,9 @@ model NoticeAttachment {
 }
 
 model NoticeView {
-  view_id   Int      @id @default(autoincrement())
-  notice_id Int
-  user_id   Int
+  view_id   String   @id @default(uuid())
+  notice_id String // Changed from Int to String
+  user_id   String // Changed from Int to String
   viewed_at DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -692,7 +688,7 @@ model NoticeView {
 // =====================================================
 
 model ForumTag {
-  tag_id   Int    @id @default(autoincrement())
+  tag_id   String @id @default(uuid())
   tag_name String @unique @db.VarChar(50)
 
   // Relations
@@ -702,11 +698,11 @@ model ForumTag {
 }
 
 model ForumTopic {
-  topic_id       Int       @id @default(autoincrement())
+  topic_id       String    @id @default(uuid())
   title          String    @db.VarChar(200)
   content        String    @db.Text
-  author_user_id Int
-  org_node_id    Int?
+  author_user_id String // Changed from Int to String
+  org_node_id    String? // Changed from Int to String
   is_pinned      Boolean   @default(false)
   is_locked      Boolean   @default(false)
   view_count     Int       @default(0)
@@ -726,10 +722,10 @@ model ForumTopic {
 }
 
 model ForumComment {
-  comment_id        Int      @id @default(autoincrement())
-  topic_id          Int
-  parent_comment_id Int?
-  author_user_id    Int
+  comment_id        String   @id @default(uuid())
+  topic_id          String // Changed from Int to String
+  parent_comment_id String? // Changed from Int to String
+  author_user_id    String // Changed from Int to String
   content           String   @db.Text
   likes_count       Int      @default(0)
   is_edited         Boolean  @default(false)
@@ -746,9 +742,9 @@ model ForumComment {
 }
 
 model TopicTagMapping {
-  mapping_id Int @id @default(autoincrement())
-  topic_id   Int
-  tag_id     Int
+  mapping_id String @id @default(uuid())
+  topic_id   String // Changed from Int to String
+  tag_id     String // Changed from Int to String
 
   // Relations
   topic ForumTopic @relation(fields: [topic_id], references: [topic_id])
@@ -759,9 +755,9 @@ model TopicTagMapping {
 }
 
 model TopicLike {
-  like_id  Int      @id @default(autoincrement())
-  topic_id Int
-  user_id  Int
+  like_id  String   @id @default(uuid())
+  topic_id String // Changed from Int to String
+  user_id  String // Changed from Int to String
   liked_at DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -773,9 +769,9 @@ model TopicLike {
 }
 
 model ForumAttachment {
-  attachment_id Int      @id @default(autoincrement())
-  topic_id      Int
-  file_id       Int
+  attachment_id String   @id @default(uuid())
+  topic_id      String // Changed from Int to String
+  file_id       String // Changed from Int to String
   uploaded_at   DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -787,17 +783,16 @@ model ForumAttachment {
 }
 
 // =====================================================
-// =====================================================
-// RESOURCE MANAGEMENT MODULE
+// 9. RESOURCE MANAGEMENT MODULE
 // =====================================================
 
 model Resource {
-  resource_id         Int       @id @default(autoincrement())
+  resource_id         String    @id @default(uuid())
   title               String    @db.VarChar(200)
   description         String?   @db.Text
-  file_id             Int
-  uploaded_by_user_id Int
-  org_node_id         Int?
+  file_id             String // Changed from Int to String
+  uploaded_by_user_id String // Changed from Int to String
+  org_node_id         String? // Changed from Int to String
   download_count      Int       @default(0)
   view_count          Int       @default(0)
   rating_avg          Float     @default(0)
@@ -828,10 +823,10 @@ model Resource {
 }
 
 model ResourceCategory {
-  category_id   Int      @id @default(autoincrement())
+  category_id   String   @id @default(uuid())
   category_name String   @unique @db.VarChar(100)
   description   String?  @db.Text
-  parent_id     Int?     @db.Integer
+  parent_id     String?
   icon          String?  @db.VarChar(50)
   color         String?  @db.VarChar(7)
   sort_order    Int      @default(0)
@@ -850,7 +845,7 @@ model ResourceCategory {
 }
 
 model ResourceTag {
-  tag_id      Int      @id @default(autoincrement())
+  tag_id      String   @id @default(uuid())
   tag_name    String   @unique @db.VarChar(50)
   usage_count Int      @default(0)
   created_at  DateTime @default(now()) @db.Timestamp(6)
@@ -862,9 +857,9 @@ model ResourceTag {
 }
 
 model ResourceCategoryMapping {
-  mapping_id  Int @id @default(autoincrement())
-  resource_id Int
-  category_id Int
+  mapping_id  String @id @default(uuid())
+  resource_id String // Changed from Int to String
+  category_id String // Changed from Int to String
 
   // Relations
   resource Resource         @relation(fields: [resource_id], references: [resource_id])
@@ -875,9 +870,9 @@ model ResourceCategoryMapping {
 }
 
 model ResourceTagMapping {
-  mapping_id  Int @id @default(autoincrement())
-  resource_id Int
-  tag_id      Int
+  mapping_id  String @id @default(uuid())
+  resource_id String // Changed from Int to String
+  tag_id      String // Changed from Int to String
 
   // Relations
   resource Resource    @relation(fields: [resource_id], references: [resource_id])
@@ -888,12 +883,12 @@ model ResourceTagMapping {
 }
 
 model ResourceVersion {
-  version_id     Int      @id @default(autoincrement())
-  resource_id    Int
+  version_id     String   @id @default(uuid())
+  resource_id    String // Changed from Int to String
   version_number Int
-  file_id        Int
+  file_id        String // Changed from Int to String
   change_notes   String?  @db.Text
-  created_by     Int
+  created_by     String // Changed from Int to String
   created_at     DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -907,9 +902,9 @@ model ResourceVersion {
 }
 
 model ResourceFavorite {
-  favorite_id Int      @id @default(autoincrement())
-  resource_id Int
-  user_id     Int
+  favorite_id String   @id @default(uuid())
+  resource_id String // Changed from Int to String
+  user_id     String // Changed from Int to String
   created_at  DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
@@ -921,10 +916,10 @@ model ResourceFavorite {
 }
 
 model ResourceComment {
-  comment_id  Int      @id @default(autoincrement())
-  resource_id Int
-  user_id     Int
-  parent_id   Int?
+  comment_id  String   @id @default(uuid())
+  resource_id String // Changed from Int to String
+  user_id     String // Changed from Int to String
+  parent_id   String? // Changed from Int to String
   content     String   @db.Text
   is_edited   Boolean  @default(false)
   created_at  DateTime @default(now()) @db.Timestamp(6)
@@ -941,9 +936,9 @@ model ResourceComment {
 }
 
 model ResourceReview {
-  review_id   Int      @id @default(autoincrement())
-  resource_id Int
-  user_id     Int
+  review_id   String   @id @default(uuid())
+  resource_id String // Changed from Int to String
+  user_id     String // Changed from Int to String
   rating      Int      @db.SmallInt
   review_text String?  @db.Text
   created_at  DateTime @default(now()) @db.Timestamp(6)
@@ -959,9 +954,9 @@ model ResourceReview {
 }
 
 model ResourceAccessLog {
-  log_id      Int      @id @default(autoincrement())
-  resource_id Int
-  user_id     Int
+  log_id      String   @id @default(uuid())
+  resource_id String // Changed from Int to String
+  user_id     String // Changed from Int to String
   action      String   @db.VarChar(20) // view, download, preview
   ip_address  String?  @db.VarChar(45)
   user_agent  String?  @db.Text
@@ -982,7 +977,7 @@ model ResourceAccessLog {
 // =====================================================
 
 model DashboardWidget {
-  widget_id        Int     @id @default(autoincrement())
+  widget_id        String  @id @default(uuid())
   widget_name      String  @db.VarChar(100)
   widget_type      String? @db.VarChar(50)
   config           Json?
@@ -996,9 +991,9 @@ model DashboardWidget {
 }
 
 model UserDashboard {
-  user_dashboard_id Int     @id @default(autoincrement())
-  user_id           Int
-  widget_id         Int
+  user_dashboard_id String  @id @default(uuid())
+  user_id           String // Changed from Int to String
+  widget_id         String // Changed from Int to String
   layout_order      Int?
   is_visible        Boolean @default(true)
 
@@ -1011,8 +1006,8 @@ model UserDashboard {
 }
 
 model ReportRequest {
-  request_id           Int       @id @default(autoincrement())
-  requested_by_user_id Int
+  request_id           String    @id @default(uuid())
+  requested_by_user_id String // Changed from Int to String
   query_text           String    @db.Text
   response_summary     Json?
   export_format        String?   @db.VarChar(20)
@@ -1028,7 +1023,7 @@ model ReportRequest {
 }
 
 model KpiDefinition {
-  kpi_id              Int      @id @default(autoincrement())
+  kpi_id              String   @id @default(uuid())
   kpi_name            String   @unique @db.VarChar(100)
   calculation_formula String?  @db.Text
   unit                String?  @db.VarChar(20)
@@ -1042,8 +1037,8 @@ model KpiDefinition {
 }
 
 model KpiSnapshot {
-  snapshot_id   Int      @id @default(autoincrement())
-  kpi_id        Int
+  snapshot_id   String   @id @default(uuid())
+  kpi_id        String // Changed from Int to String
   actual_value  Decimal? @db.Decimal(10, 2)
   snapshot_date DateTime @default(now()) @db.Date
   notes         String?  @db.Text
@@ -1059,8 +1054,8 @@ model KpiSnapshot {
 // =====================================================
 
 model SystemUsageLog {
-  log_id          Int      @id @default(autoincrement())
-  user_id         Int?
+  log_id          String   @id @default(uuid())
+  user_id         String? // Changed from Int to String
   module_accessed String?  @db.VarChar(50)
   action          String?  @db.VarChar(100)
   metadata        Json?
@@ -1075,11 +1070,11 @@ model SystemUsageLog {
 }
 
 model AuditLog {
-  audit_id       Int      @id @default(autoincrement())
-  user_id        Int?
+  audit_id       String   @id @default(uuid())
+  user_id        String? // Changed from Int to String
   action         String   @db.VarChar(100)
   table_affected String?  @db.VarChar(50)
-  record_id      Int?
+  record_id      String? // Changed from Int to String
   old_values     Json?
   new_values     Json?
   ip_address     String?  @db.VarChar(45)
@@ -1092,8 +1087,8 @@ model AuditLog {
 }
 
 model PasswordResetToken {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String
   token     String   @unique
   expiresAt DateTime
   used      Boolean  @default(false)
@@ -1107,8 +1102,8 @@ model PasswordResetToken {
 }
 
 model PasswordHistory {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
+  id         String   @id @default(uuid())
+  user_id    String
   password   String   @db.Text
   created_at DateTime @default(now()) @db.Timestamp(6)
 
@@ -1124,8 +1119,8 @@ model PasswordHistory {
 // =====================================================
 
 model UserEducation {
-  education_id     Int      @id @default(autoincrement())
-  user_id          Int
+  education_id     String   @id @default(uuid())
+  user_id          String
   degree_level     String?  @db.VarChar(50)
   field_of_study   String?  @db.VarChar(150)
   institution_name String?  @db.VarChar(200)
@@ -1141,8 +1136,8 @@ model UserEducation {
 }
 
 model UserExperience {
-  experience_id     Int       @id @default(autoincrement())
-  user_id           Int
+  experience_id     String    @id @default(uuid())
+  user_id           String
   organization_name String?   @db.VarChar(200)
   position_title    String?   @db.VarChar(150)
   employment_type   String?   @db.VarChar(50)
@@ -1160,7 +1155,7 @@ model UserExperience {
 }
 
 model Skill {
-  skill_id   Int    @id @default(autoincrement())
+  skill_id   String @id @default(uuid())
   skill_name String @unique @db.VarChar(100)
 
   // Relations
@@ -1170,9 +1165,9 @@ model Skill {
 }
 
 model UserSkill {
-  user_skill_id       Int     @id @default(autoincrement())
-  user_id             Int
-  skill_id            Int
+  user_skill_id       String  @id @default(uuid())
+  user_id             String
+  skill_id            String
   proficiency_level   String? @db.VarChar(30)
   years_of_experience Int?
 

@@ -121,7 +121,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('join_conversation')
   async handleJoinConversation(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { conversation_id: number },
+    @MessageBody() data: { conversation_id: string },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);
@@ -146,10 +146,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody()
     data: {
-      conversation_id: number;
+      conversation_id: string;
       content: string;
-      parent_message_id?: number;
-      attachments?: number[];
+      parent_message_id?: string;
+      attachments?: string[];
     },
   ) {
     const token = client.handshake.auth.token;
@@ -158,9 +158,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const message = await this.communicationService.sendMessage(
       data.conversation_id,
       user.user_id,
-      data.content,
-      data.parent_message_id,
-      data.attachments,
+      {
+        content: data.content,
+        parent_message_id: data.parent_message_id,
+        attachment_ids: data.attachments,
+      },
     );
 
     // Broadcast to all participants in the conversation
@@ -178,7 +180,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('typing')
   async handleTyping(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { conversation_id: number; is_typing: boolean },
+    @MessageBody() data: { conversation_id: string; is_typing: boolean },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);
@@ -204,7 +206,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }, 3000);
 
       this.typingUsers.set(user.user_id, {
-        conversationId: data.conversation_id,
+        conversationId: parseInt(data.conversation_id, 10),
         timeout,
       });
 
@@ -222,7 +224,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('mark_read')
   async handleMarkRead(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { conversation_id: number; message_id: number },
+    @MessageBody() data: { conversation_id: string; message_id: string },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);
@@ -247,7 +249,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('add_reaction')
   async handleAddReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { message_id: number; reaction_type: string },
+    @MessageBody() data: { message_id: string; reaction_type: string },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);
@@ -273,7 +275,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('remove_reaction')
   async handleRemoveReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { message_id: number; reaction_type: string },
+    @MessageBody() data: { message_id: string; reaction_type: string },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);
@@ -298,7 +300,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('delete_message')
   async handleDeleteMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { message_id: number },
+    @MessageBody() data: { message_id: string },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);
@@ -323,10 +325,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody()
     data: {
-      conversation_id: number;
-      parent_message_id: number;
+      conversation_id: string;
+      parent_message_id: string;
       content: string;
-      attachments?: number[];
+      attachments?: string[];
     },
   ) {
     const token = client.handshake.auth.token;
@@ -356,7 +358,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('get_thread')
   async handleGetThread(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { message_id: number },
+    @MessageBody() data: { message_id: string },
   ) {
     const token = client.handshake.auth.token;
     const user = await this.authService.validateToken(token);

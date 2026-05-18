@@ -1,10 +1,11 @@
 import {
   IsOptional,
   IsString,
-  IsInt,
+  IsUUID,
   IsArray,
   IsBoolean,
   IsIn,
+  IsInt,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -15,11 +16,13 @@ export class ResourceFilterDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Category ID (UUID)',
+  })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  category_id?: number;
+  @IsUUID()
+  category_id?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -27,17 +30,21 @@ export class ResourceFilterDto {
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174001',
+    description: 'Organization node ID (UUID)',
+  })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  org_node_id?: number;
+  @IsUUID()
+  org_node_id?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174002',
+    description: 'Uploader user ID (UUID)',
+  })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  uploaded_by?: number;
+  @IsUUID()
+  uploaded_by?: string;
 
   @ApiPropertyOptional({
     enum: ['newest', 'oldest', 'popular', 'most_viewed', 'top_rated'],

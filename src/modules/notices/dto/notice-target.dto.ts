@@ -1,20 +1,20 @@
-import { IsInt, IsOptional, IsString, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class NoticeTargetDto {
   @ApiProperty()
-  @IsInt()
-  notice_id: number;
+  @IsString()
+  notice_id: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsInt()
-  org_node_id?: number;
+  @IsString()
+  org_node_id?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsInt()
-  role_id?: number;
+  @IsString()
+  role_id?: string;
 
   @ApiProperty({ enum: ['org_node', 'role', 'all'] })
   @IsString()

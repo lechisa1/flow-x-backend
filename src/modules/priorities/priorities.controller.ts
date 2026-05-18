@@ -101,7 +101,7 @@ export class PrioritiesController {
   @Permissions('priorities:read')
   @ApiOperation({ summary: 'Get priority by ID' })
   @ApiParam({ name: 'id', description: 'Priority ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id') id: string) {
     return this.prioritiesService.findOne(id);
   }
 
@@ -116,7 +116,7 @@ export class PrioritiesController {
   @Permissions('priorities:update')
   @ApiOperation({ summary: 'Update a priority' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updatePriorityDto: UpdatePriorityDto,
     @CurrentUser() user: any,
   ) {
@@ -134,7 +134,7 @@ export class PrioritiesController {
   @Post('reorder')
   @Permissions('priorities:update')
   @ApiOperation({ summary: 'Reorder priorities' })
-  async reorder(@Body('priority_ids') priorityIds: number[]) {
+  async reorder(@Body('priority_ids') priorityIds: string[]) {
     const priorities =
       await this.prioritiesService.reorderPriorities(priorityIds);
     return {
@@ -164,7 +164,7 @@ export class PrioritiesController {
   @Permissions('priorities:delete')
   @ApiOperation({ summary: 'Delete a priority' })
   async delete(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @CurrentUser() user: any,
   ) {
     return this.prioritiesService.delete(id, user.user_id);

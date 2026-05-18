@@ -26,7 +26,7 @@ export class NoticesService {
 
   async create(
     createNoticeDto: CreateNoticeDto,
-    userId: number,
+    userId: string,
   ): Promise<NoticeResponseDto> {
     // Get status for 'draft'
     const draftStatus = await this.prisma.status.findFirst({
@@ -43,11 +43,7 @@ export class NoticesService {
         title: createNoticeDto.title,
         content: createNoticeDto.content,
         published_by_user_id: userId,
-        category_id: createNoticeDto.category_id
-          ? typeof createNoticeDto.category_id === 'string'
-            ? parseInt(createNoticeDto.category_id, 10)
-            : createNoticeDto.category_id
-          : 0,
+        category_id: createNoticeDto.category_id,
         notice_type: createNoticeDto.notice_type,
         scheduled_publish_at: createNoticeDto.scheduled_publish_at
           ? new Date(createNoticeDto.scheduled_publish_at)
@@ -110,7 +106,7 @@ export class NoticesService {
     return this.findOne(notice.notice_id, userId);
   }
 
-  async findAll(userId: number, filterDto: NoticeFilterDto) {
+  async findAll(userId: string, filterDto: NoticeFilterDto) {
     const page = filterDto.page || 1;
     const limit = filterDto.limit || 10;
     const skip = (page - 1) * limit;
@@ -257,7 +253,7 @@ export class NoticesService {
     };
   }
 
-  async findOne(noticeId: number, userId: number): Promise<NoticeResponseDto> {
+  async findOne(noticeId: string, userId: string): Promise<NoticeResponseDto> {
     // Check if user has access
     const hasAccess = await this.checkUserAccess(noticeId, userId);
     if (!hasAccess) {
@@ -333,9 +329,9 @@ export class NoticesService {
   }
 
   async update(
-    noticeId: number,
+    noticeId: string,
     updateNoticeDto: UpdateNoticeDto,
-    userId: number,
+    userId: string,
   ): Promise<NoticeResponseDto> {
     const notice = await this.prisma.notice.findUnique({
       where: { notice_id: noticeId },
@@ -379,12 +375,9 @@ export class NoticesService {
       data: {
         title: updateNoticeDto.title,
         content: updateNoticeDto.content,
-        category_id:
-          updateNoticeDto.category_id !== undefined
-            ? typeof updateNoticeDto.category_id === 'string'
-              ? parseInt(updateNoticeDto.category_id, 10)
-              : updateNoticeDto.category_id
-            : undefined,
+        category_id: updateNoticeDto.category_id !== undefined
+          ? updateNoticeDto.category_id
+          : undefined,
         notice_type: updateNoticeDto.notice_type,
         scheduled_publish_at: updateNoticeDto.scheduled_publish_at
           ? new Date(updateNoticeDto.scheduled_publish_at)
@@ -436,8 +429,8 @@ export class NoticesService {
   }
 
   async publishNotice(
-    noticeId: number,
-    userId: number,
+    noticeId: string,
+    userId: string,
   ): Promise<NoticeResponseDto> {
     const notice = await this.prisma.notice.findUnique({
       where: { notice_id: noticeId },
@@ -499,8 +492,8 @@ export class NoticesService {
   }
 
   async archiveNotice(
-    noticeId: number,
-    userId: number,
+    noticeId: string,
+    userId: string,
   ): Promise<NoticeResponseDto> {
     const notice = await this.prisma.notice.findUnique({
       where: { notice_id: noticeId },
@@ -538,8 +531,8 @@ export class NoticesService {
   }
 
   async deleteNotice(
-    noticeId: number,
-    userId: number,
+    noticeId: string,
+    userId: string,
   ): Promise<{ message: string }> {
     const notice = await this.prisma.notice.findUnique({
       where: { notice_id: noticeId },
@@ -587,7 +580,7 @@ export class NoticesService {
 
   async bulkAction(
     bulkActionDto: NoticeBulkActionDto,
-    userId: number,
+    userId: string,
   ): Promise<{ message: string; results: any[] }> {
     const results: any[] = [];
 
@@ -755,7 +748,7 @@ export class NoticesService {
     };
   }
 
-  private async addTargets(noticeId: number, targets: any[]) {
+  private async addTargets(noticeId: string, targets: any[]) {
     for (const target of targets) {
       await this.prisma.noticeTarget.create({
         data: {
@@ -768,7 +761,7 @@ export class NoticesService {
     }
   }
 
-  private async addAttachments(noticeId: number, attachmentIds: number[]) {
+  private async addAttachments(noticeId: string, attachmentIds: string[]) {
     for (const fileId of attachmentIds) {
       await this.prisma.noticeAttachment.create({
         data: {
@@ -779,7 +772,7 @@ export class NoticesService {
     }
   }
 
-  private async markAsViewed(noticeId: number, userId: number) {
+  private async markAsViewed(noticeId: string, userId: string) {
     const existing = await this.prisma.noticeView.findUnique({
       where: {
         notice_id_user_id: {
@@ -800,8 +793,8 @@ export class NoticesService {
   }
 
   private async checkUserAccess(
-    noticeId: number,
-    userId: number,
+    noticeId: string,
+    userId: string,
   ): Promise<boolean> {
     const notice = await this.prisma.notice.findUnique({
       where: { notice_id: noticeId },
@@ -867,7 +860,7 @@ export class NoticesService {
     });
   }
 
-  private async getAccessibleNoticeIds(userId: number): Promise<number[]> {
+  private async getAccessibleNoticeIds(userId: string): Promise<string[]> {
     // Admin can see all
     const userRoles = await this.prisma.userRole.findMany({
       where: { user_id: userId },
@@ -944,7 +937,7 @@ export class NoticesService {
     ];
   }
 
-  private async sendNotificationsToTargets(noticeId: number) {
+  private async sendNotificationsToTargets(noticeId: string) {
     // Get all users who should receive this notice
     const accessibleUsers = await this.getTargetUsersForNotice(noticeId);
 
@@ -956,7 +949,7 @@ export class NoticesService {
     );
   }
 
-  private async getTargetUsersForNotice(noticeId: number): Promise<number[]> {
+  private async getTargetUsersForNotice(noticeId: string): Promise<string[]> {
     const notice = await this.prisma.notice.findUnique({
       where: { notice_id: noticeId },
       include: { targets: true },
@@ -973,7 +966,7 @@ export class NoticesService {
       return users.map((u) => u.user_id);
     }
 
-    const userIds: number[] = [];
+    const userIds: string[] = [];
 
     for (const target of notice.targets) {
       if (target.target_type === 'all') {
@@ -1001,10 +994,10 @@ export class NoticesService {
   }
 
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {
@@ -1040,7 +1033,7 @@ export class NoticesService {
     });
   }
 
-  async deleteCategory(categoryId: number) {
+  async deleteCategory(categoryId: string) {
     const category = await this.prisma.noticeCategory.findUnique({
       where: { category_id: categoryId },
       include: { notices: { take: 1 } },
@@ -1063,7 +1056,7 @@ export class NoticesService {
     return { message: 'Category deleted successfully' };
   }
 
-  async saveFile(file: Express.Multer.File, userId: number) {
+  async saveFile(file: Express.Multer.File, userId: string) {
     return this.prisma.file.create({
       data: {
         file_name: file.filename,

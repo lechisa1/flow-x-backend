@@ -27,7 +27,7 @@ export class CommunicationService {
 
   async createConversation(
     createDto: CreateConversationDto,
-    userId: number,
+    userId: string,
   ): Promise<ConversationResponseDto> {
     // Get conversation type
     const conversationType = await this.prisma.conversationType.findUnique({
@@ -133,7 +133,7 @@ export class CommunicationService {
   }
 
   async getUserConversations(
-    userId: number,
+    userId: string,
     page: number = 1,
     limit: number = 20,
   ) {
@@ -233,8 +233,8 @@ export class CommunicationService {
   }
 
   async getConversationDetails(
-    conversationId: number,
-    userId: number,
+    conversationId: string,
+    userId: string,
   ): Promise<ConversationResponseDto> {
     const conversation = await this.prisma.conversation.findUnique({
       where: { conversation_id: conversationId, is_active: true },
@@ -321,8 +321,8 @@ export class CommunicationService {
   }
 
   async getMessages(
-    conversationId: number,
-    userId: number,
+    conversationId: string,
+    userId: string,
     page: number = 1,
     limit: number = 50,
   ) {
@@ -387,12 +387,10 @@ export class CommunicationService {
   }
 
   async sendMessage(
-    conversationId: number,
-    userId: number,
-    content: string,
-    parentMessageId?: number,
-    attachmentIds?: number[],
-  ): Promise<MessageWithDetails> {
+    conversationId: string,
+    userId: string,
+    sendMessageDto: SendMessageDto,
+  ) {
     // Verify user is participant
     const participant = await this.prisma.conversationParticipant.findUnique({
       where: {
@@ -409,22 +407,13 @@ export class CommunicationService {
       );
     }
 
-    // Check if conversation is active
-    const conversation = await this.prisma.conversation.findUnique({
-      where: { conversation_id: conversationId },
-    });
-
-    if (!conversation?.is_active) {
-      throw new BadRequestException('Conversation is not active');
-    }
-
     // Create message
     const message = await this.prisma.message.create({
       data: {
         conversation_id: conversationId,
         sender_user_id: userId,
-        parent_message_id: parentMessageId,
-        content_text: content,
+        content_text: sendMessageDto.content,
+        parent_message_id: sendMessageDto.parent_message_id || null,
       },
       include: {
         sender: {
@@ -433,6 +422,11 @@ export class CommunicationService {
             full_name: true,
             email: true,
             profile_pic_url: true,
+          },
+        },
+        attachments: {
+          include: {
+            file: true,
           },
         },
       },
@@ -444,14 +438,12 @@ export class CommunicationService {
       data: { updated_at: new Date() },
     });
 
-    // Add attachments and fetch their details
-    let attachments: {
-      file_id: number;
-      file_name: string;
-      file_url: string;
-    }[] = [];
-    if (attachmentIds && attachmentIds.length > 0) {
-      for (const fileId of attachmentIds) {
+    // Add attachments if any
+    if (
+      sendMessageDto.attachment_ids &&
+      sendMessageDto.attachment_ids.length > 0
+    ) {
+      for (const fileId of sendMessageDto.attachment_ids) {
         await this.prisma.messageAttachment.create({
           data: {
             message_id: message.message_id,
@@ -459,24 +451,9 @@ export class CommunicationService {
           },
         });
       }
-
-      // Fetch attachments with file details
-      const attachmentRecords = await this.prisma.messageAttachment.findMany({
-        where: { message_id: message.message_id },
-        include: { file: true },
-      });
-
-      attachments = attachmentRecords.map((a) => ({
-        file_id: a.file.file_id,
-        file_name: a.file.file_name,
-        file_url: a.file.file_url,
-      }));
     }
 
-    this.logger.log(
-      `Message sent in conversation ${conversationId} by user ${userId}`,
-    );
-
+    // Return formatted message
     return {
       message_id: message.message_id,
       content_text: message.content_text,
@@ -489,92 +466,15 @@ export class CommunicationService {
       parent_message_id: message.parent_message_id ?? undefined,
       reactions: [],
       read_by: [],
-      attachments,
+      attachments: message.attachments.map((a) => ({
+        file_id: a.file.file_id,
+        file_name: a.file.file_name,
+        file_url: a.file.file_url,
+      })),
     };
   }
 
-  async markMessageAsRead(messageId: number, userId: number) {
-    const message = await this.prisma.message.findUnique({
-      where: { message_id: messageId },
-    });
-
-    if (!message) {
-      throw new NotFoundException('Message not found');
-    }
-
-    await this.prisma.messageRead.upsert({
-      where: {
-        message_id_user_id: {
-          message_id: messageId,
-          user_id: userId,
-        },
-      },
-      update: {
-        read_at: new Date(),
-      },
-      create: {
-        message_id: messageId,
-        user_id: userId,
-      },
-    });
-
-    // Update participant's last_read_at
-    await this.prisma.conversationParticipant.update({
-      where: {
-        conversation_id_user_id: {
-          conversation_id: message.conversation_id,
-          user_id: userId,
-        },
-      },
-      data: {
-        last_read_at: new Date(),
-      },
-    });
-  }
-
-  async addReaction(messageId: number, userId: number, reactionType: string) {
-    return this.prisma.messageReaction.upsert({
-      where: {
-        message_id_user_id_reaction_type: {
-          message_id: messageId,
-          user_id: userId,
-          reaction_type: reactionType,
-        },
-      },
-      update: {},
-      create: {
-        message_id: messageId,
-        user_id: userId,
-        reaction_type: reactionType,
-      },
-      include: {
-        user: {
-          select: {
-            user_id: true,
-            full_name: true,
-          },
-        },
-      },
-    });
-  }
-
-  async removeReaction(
-    messageId: number,
-    userId: number,
-    reactionType: string,
-  ) {
-    await this.prisma.messageReaction.delete({
-      where: {
-        message_id_user_id_reaction_type: {
-          message_id: messageId,
-          user_id: userId,
-          reaction_type: reactionType,
-        },
-      },
-    });
-  }
-
-  async deleteMessage(messageId: number) {
+  async deleteMessage(messageId: string) {
     await this.prisma.message.update({
       where: { message_id: messageId },
       data: { deleted_at: new Date() },
@@ -582,11 +482,10 @@ export class CommunicationService {
   }
 
   async addParticipants(
-    conversationId: number,
-    userId: number,
-    addDto: AddParticipantsDto,
-  ): Promise<{ user_id: number; status: string }[]> {
-    // Verify user is creator or admin
+    conversationId: string,
+    userId: string,
+    addParticipantsDto: AddParticipantsDto,
+  ) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { conversation_id: conversationId },
     });
@@ -606,32 +505,39 @@ export class CommunicationService {
 
     if (!isCreator && !isAdmin) {
       throw new ForbiddenException(
-        'Only conversation creator can add participants',
+        'Only creator or admin can add participants',
       );
     }
 
-    const results: { user_id: number; status: string }[] = [];
-    for (const participantId of addDto.user_ids) {
-      try {
+    // Add each participant
+    for (const participantId of addParticipantsDto.user_ids) {
+      // Skip if already participant
+      const existing = await this.prisma.conversationParticipant.findUnique({
+        where: {
+          conversation_id_user_id: {
+            conversation_id: conversationId,
+            user_id: participantId,
+          },
+        },
+      });
+
+      if (!existing) {
         await this.prisma.conversationParticipant.create({
           data: {
             conversation_id: conversationId,
             user_id: participantId,
           },
         });
-        results.push({ user_id: participantId, status: 'added' });
-      } catch (error) {
-        results.push({ user_id: participantId, status: 'already_exists' });
       }
     }
 
-    return results;
+    return { message: 'Participants added successfully' };
   }
 
   async removeParticipant(
-    conversationId: number,
-    userId: number,
-    targetUserId: number,
+    conversationId: string,
+    userId: string,
+    participantId: string,
   ) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { conversation_id: conversationId },
@@ -650,7 +556,7 @@ export class CommunicationService {
       ['super_admin', 'admin'].includes(ur.role.role_name),
     );
 
-    if (!isCreator && !isAdmin && userId !== targetUserId) {
+    if (!isCreator && !isAdmin && userId !== participantId) {
       throw new ForbiddenException('Cannot remove this user');
     }
 
@@ -658,7 +564,7 @@ export class CommunicationService {
       where: {
         conversation_id_user_id: {
           conversation_id: conversationId,
-          user_id: targetUserId,
+          user_id: participantId,
         },
       },
     });
@@ -666,7 +572,7 @@ export class CommunicationService {
     return { message: 'Participant removed successfully' };
   }
 
-  async pinConversation(conversationId: number, userId: number) {
+  async pinConversation(conversationId: string, userId: string) {
     await this.prisma.pinnedConversation.create({
       data: {
         conversation_id: conversationId,
@@ -676,7 +582,7 @@ export class CommunicationService {
     return { message: 'Conversation pinned' };
   }
 
-  async unpinConversation(conversationId: number, userId: number) {
+  async unpinConversation(conversationId: string, userId: string) {
     await this.prisma.pinnedConversation.delete({
       where: {
         conversation_id_pinned_by_user_id: {
@@ -691,8 +597,8 @@ export class CommunicationService {
   // ==================== Chat Requests (Cross-Node Communication) ====================
 
   async sendChatRequest(
-    fromUserId: number,
-    toUserId: number,
+    fromUserId: string,
+    toUserId: string,
     message?: string,
   ) {
     // Check if already blocked
@@ -760,8 +666,8 @@ export class CommunicationService {
   }
 
   async respondToChatRequest(
-    requestId: number,
-    userId: number,
+    requestId: string,
+    userId: string,
     status: string,
   ) {
     const request = await this.prisma.chatRequest.findUnique({
@@ -851,7 +757,7 @@ export class CommunicationService {
     }
   }
 
-  async getPendingRequests(userId: number) {
+  async getPendingRequests(userId: string) {
     const requests = await this.prisma.chatRequest.findMany({
       where: {
         to_user_id: userId,
@@ -873,7 +779,7 @@ export class CommunicationService {
     return requests;
   }
 
-  async getSentRequests(userId: number) {
+  async getSentRequests(userId: string) {
     const requests = await this.prisma.chatRequest.findMany({
       where: {
         from_user_id: userId,
@@ -896,7 +802,7 @@ export class CommunicationService {
 
   // ==================== Block User ====================
 
-  async blockUser(blockerId: number, blockedId: number, reason?: string) {
+  async blockUser(blockerId: string, blockedId: string, reason?: string) {
     const existing = await this.prisma.blockedUser.findUnique({
       where: {
         blocker_id_blocked_id: {
@@ -946,7 +852,7 @@ export class CommunicationService {
     return block;
   }
 
-  async unblockUser(blockerId: number, blockedId: number) {
+  async unblockUser(blockerId: string, blockedId: string) {
     await this.prisma.blockedUser.delete({
       where: {
         blocker_id_blocked_id: {
@@ -959,7 +865,7 @@ export class CommunicationService {
     return { message: 'User unblocked' };
   }
 
-  async getBlockedUsers(userId: number) {
+  async getBlockedUsers(userId: string) {
     const blocked = await this.prisma.blockedUser.findMany({
       where: { blocker_id: userId },
       include: {
@@ -980,8 +886,8 @@ export class CommunicationService {
   // ==================== Helper Methods ====================
 
   async canAccessConversation(
-    conversationId: number,
-    userId: number,
+    conversationId: string,
+    userId: string,
   ): Promise<boolean> {
     const participant = await this.prisma.conversationParticipant.findUnique({
       where: {
@@ -994,7 +900,7 @@ export class CommunicationService {
     return !!participant;
   }
 
-  async getUserNodeIds(userId: number): Promise<number[]> {
+  async getUserNodeIds(userId: string): Promise<string[]> {
     const assignments = await this.prisma.userAssignment.findMany({
       where: { user_id: userId },
       select: { org_node_id: true },
@@ -1002,7 +908,7 @@ export class CommunicationService {
     return assignments.map((a) => a.org_node_id);
   }
 
-  async getUserConversationIds(userId: number): Promise<number[]> {
+  async getUserConversationIds(userId: string): Promise<string[]> {
     const participants = await this.prisma.conversationParticipant.findMany({
       where: { user_id: userId },
       select: { conversation_id: true },
@@ -1010,7 +916,7 @@ export class CommunicationService {
     return participants.map((p) => p.conversation_id);
   }
 
-  async getMessage(messageId: number) {
+   async getMessage(messageId: string) {
     const message = await this.prisma.message.findUnique({
       where: { message_id: messageId },
     });
@@ -1020,9 +926,118 @@ export class CommunicationService {
     return message;
   }
 
+  async markMessageAsRead(messageId: string, userId: string) {
+    const message = await this.prisma.message.findUnique({
+      where: { message_id: messageId },
+      select: { conversation_id: true },
+    });
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
+
+    const participant = await this.prisma.conversationParticipant.findUnique({
+      where: {
+        conversation_id_user_id: {
+          conversation_id: message.conversation_id,
+          user_id: userId,
+        },
+      },
+    });
+    if (!participant) {
+      throw new ForbiddenException('You are not a participant in this conversation');
+    }
+
+    await this.prisma.messageRead.upsert({
+      where: {
+        message_id_user_id: {
+          message_id: messageId,
+          user_id: userId,
+        },
+      },
+      update: { read_at: new Date() },
+      create: {
+        message_id: messageId,
+        user_id: userId,
+        read_at: new Date(),
+      },
+    });
+
+    await this.prisma.conversationParticipant.update({
+      where: {
+        conversation_id_user_id: {
+          conversation_id: message.conversation_id,
+          user_id: userId,
+        },
+      },
+      data: { last_read_at: new Date() },
+    });
+  }
+
+  async addReaction(messageId: string, userId: string, reactionType: string) {
+    const message = await this.prisma.message.findUnique({
+      where: { message_id: messageId },
+      select: { conversation_id: true },
+    });
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
+
+    const participant = await this.prisma.conversationParticipant.findUnique({
+      where: {
+        conversation_id_user_id: {
+          conversation_id: message.conversation_id,
+          user_id: userId,
+        },
+      },
+    });
+    if (!participant) {
+      throw new ForbiddenException('You are not a participant in this conversation');
+    }
+
+    const reaction = await this.prisma.messageReaction.create({
+      data: {
+        message_id: messageId,
+        user_id: userId,
+        reaction_type: reactionType,
+      },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            full_name: true,
+          },
+        },
+      },
+    });
+
+    return {
+      reaction_id: reaction.reaction_id,
+      message_id: reaction.message_id,
+      user_id: reaction.user_id,
+      reaction_type: reaction.reaction_type,
+      reacted_at: reaction.reacted_at,
+      user: reaction.user
+        ? {
+            user_id: reaction.user.user_id,
+            full_name: reaction.user.full_name,
+          }
+        : undefined,
+    };
+  }
+
+  async removeReaction(messageId: string, userId: string, reactionType: string) {
+    await this.prisma.messageReaction.deleteMany({
+      where: {
+        message_id: messageId,
+        user_id: userId,
+        reaction_type: reactionType,
+      },
+    });
+  }
+
   private async getUnreadCount(
-    conversationId: number,
-    userId: number,
+    conversationId: string,
+    userId: string,
   ): Promise<number> {
     const participant = await this.prisma.conversationParticipant.findUnique({
       where: {
@@ -1052,7 +1067,7 @@ export class CommunicationService {
     return unreadCount;
   }
 
-  private async findDirectConversation(userId1: number, userId2: number) {
+  private async findDirectConversation(userId1: string, userId2: string) {
     const conversations1 = await this.prisma.conversationParticipant.findMany({
       where: { user_id: userId1 },
       select: { conversation_id: true },
@@ -1079,8 +1094,8 @@ export class CommunicationService {
   }
 
   private async addNodeMembersToConversation(
-    conversationId: number,
-    nodeId: number,
+    conversationId: string,
+    nodeId: string,
   ) {
     const members = await this.prisma.userAssignment.findMany({
       where: { org_node_id: nodeId },
@@ -1105,8 +1120,8 @@ export class CommunicationService {
   }
 
   private async isUserBlocked(
-    blockerId: number,
-    blockedId: number,
+    blockerId: string,
+    blockedId: string,
   ): Promise<boolean> {
     const block = await this.prisma.blockedUser.findUnique({
       where: {
@@ -1124,11 +1139,11 @@ export class CommunicationService {
    * Reply to a specific message (create threaded reply)
    */
   async replyToMessage(
-    conversationId: number,
-    parentMessageId: number,
-    userId: number,
+    conversationId: string,
+    parentMessageId: string,
+    userId: string,
     content: string,
-    attachmentIds?: number[],
+    attachmentIds?: string[],
   ): Promise<MessageWithDetails> {
     // Verify user is participant
     const participant = await this.prisma.conversationParticipant.findUnique({
@@ -1208,64 +1223,64 @@ export class CommunicationService {
       `Reply added to message ${parentMessageId} in conversation ${conversationId}`,
     );
 
-     return {
-       message_id: message.message_id,
-       content_text: message.content_text,
-       sender_user_id: message.sender.user_id,
-       sender_name: message.sender.full_name,
-       sender_email: message.sender.email,
-       sender_profile_pic: message.sender.profile_pic_url ?? undefined,
-       sent_at: message.sent_at,
-       is_edited: message.is_edited,
-       parent_message_id: message.parent_message_id ?? undefined,
-       reactions: [],
-       read_by: [],
-       attachments: message.attachments.map((a) => ({
-         file_id: a.file.file_id,
-         file_name: a.file.file_name,
-         file_url: a.file.file_url,
-       })),
-     };
+    return {
+      message_id: message.message_id,
+      content_text: message.content_text,
+      sender_user_id: message.sender.user_id,
+      sender_name: message.sender.full_name,
+      sender_email: message.sender.email,
+      sender_profile_pic: message.sender.profile_pic_url ?? undefined,
+      sent_at: message.sent_at,
+      is_edited: message.is_edited,
+      parent_message_id: message.parent_message_id ?? undefined,
+      reactions: [],
+      read_by: [],
+      attachments: message.attachments.map((a) => ({
+        file_id: a.file.file_id,
+        file_name: a.file.file_name,
+        file_url: a.file.file_url,
+      })),
+    };
   }
 
   /**
    * Get message thread (all replies to a message)
    */
-   async getMessageThread(messageId: number, userId: number): Promise<any> {
-     // Verify message exists and user has access
-     const message = await this.prisma.message.findFirst({
-       where: {
-         message_id: messageId,
-         deleted_at: null,
-       },
-       include: {
-         conversation: {
-           include: {
-             participants: {
-               where: { user_id: userId },
-             },
-           },
-         },
-         sender: {
-           select: {
-             user_id: true,
-             full_name: true,
-             email: true,
-             profile_pic_url: true,
-           },
-         },
-         reactions: {
-           include: {
-             user: {
-               select: {
-                 user_id: true,
-                 full_name: true,
-               },
-             },
-           },
-         },
-       },
-     });
+  async getMessageThread(messageId: string, userId: string): Promise<any> {
+    // Verify message exists and user has access
+    const message = await this.prisma.message.findFirst({
+      where: {
+        message_id: messageId,
+        deleted_at: null,
+      },
+      include: {
+        conversation: {
+          include: {
+            participants: {
+              where: { user_id: userId },
+            },
+          },
+        },
+        sender: {
+          select: {
+            user_id: true,
+            full_name: true,
+            email: true,
+            profile_pic_url: true,
+          },
+        },
+        reactions: {
+          include: {
+            user: {
+              select: {
+                user_id: true,
+                full_name: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
     if (!message) {
       throw new NotFoundException('Message not found');
@@ -1343,21 +1358,19 @@ export class CommunicationService {
    * Get conversation reply statistics
    */
   async getConversationReplyStats(
-    conversationId: number,
-    userId: number,
+    conversationId: string,
+    userId: string,
   ): Promise<any> {
     // Verify access
     await this.getConversationDetails(conversationId, userId);
 
-     const stats = await this.prisma.$queryRaw<
-       {
-         total_messages: number;
-         root_messages: number;
-         reply_messages: number;
-         conversations_with_replies: number;
-         reply_percentage: number;
-       }
-     >`
+    const stats = await this.prisma.$queryRaw<{
+      total_messages: number;
+      root_messages: number;
+      reply_messages: number;
+      conversations_with_replies: number;
+      reply_percentage: number;
+    }>`
      SELECT 
        COUNT(*) as total_messages,
        SUM(CASE WHEN parent_message_id IS NULL THEN 1 ELSE 0 END) as root_messages,
@@ -1403,10 +1416,10 @@ export class CommunicationService {
     };
   }
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {

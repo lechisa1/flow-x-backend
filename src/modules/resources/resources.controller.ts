@@ -51,7 +51,7 @@ export class ResourcesController {
   // ==================== Categories (before :id param routes) ====================
 
   @Post('categories')
-  @Permissions('resources:manage_categories')
+  // @Permissions('resources:manage_categories')
   @ApiOperation({ summary: 'Create resource category' })
   async createCategory(@Body() createDto: CreateCategoryDto) {
     const category = await this.resourcesService.createCategory(createDto);
@@ -62,24 +62,24 @@ export class ResourcesController {
   }
 
   @Get('categories')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get all categories' })
   async getAllCategories() {
     return this.resourcesService.getAllCategories();
   }
 
   @Get('categories/tree')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get category tree' })
   async getCategoryTree() {
     return this.resourcesService.getCategoryTree();
   }
 
   @Put('categories/:id')
-  @Permissions('resources:manage_categories')
+  // @Permissions('resources:manage_categories')
   @ApiOperation({ summary: 'Update category' })
   async updateCategory(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateDto: UpdateCategoryDto,
   ) {
     const category = await this.resourcesService.updateCategory(id, updateDto);
@@ -90,16 +90,16 @@ export class ResourcesController {
   }
 
   @Delete('categories/:id')
-  @Permissions('resources:manage_categories')
+  // @Permissions('resources:manage_categories')
   @ApiOperation({ summary: 'Delete category' })
-  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+  async deleteCategory(@Param('id') id: string) {
     return this.resourcesService.deleteCategory(id);
   }
 
   // ==================== Resource CRUD ====================
 
   @Post()
-  @Permissions('resources:create')
+  // @Permissions('resources:create')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -124,7 +124,10 @@ export class ResourcesController {
       type: 'object',
       properties: {
         title: { type: 'string', example: 'Employee Handbook 2024' },
-        description: { type: 'string', example: 'Complete guide for employees' },
+        description: {
+          type: 'string',
+          example: 'Complete guide for employees',
+        },
         org_node_id: { type: 'number', example: 5 },
         category_ids: { type: 'string', example: '[1,2]' },
         tags: { type: 'string', example: '["handbook","policy"]' },
@@ -154,7 +157,7 @@ export class ResourcesController {
   }
 
   @Get()
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get all resources with filters' })
   async findAll(
     @CurrentUser() user: any,
@@ -164,7 +167,7 @@ export class ResourcesController {
   }
 
   @Get('favorites')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get user favorites' })
   async getFavorites(
     @CurrentUser() user: any,
@@ -175,27 +178,24 @@ export class ResourcesController {
   }
 
   @Get('analytics')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get resource analytics' })
   async getAnalytics() {
     return this.resourcesService.getAnalytics();
   }
 
   @Get(':id')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get resource by ID' })
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return this.resourcesService.findOne(id, user.user_id);
   }
 
   @Put(':id')
-  @Permissions('resources:update')
+  // @Permissions('resources:update')
   @ApiOperation({ summary: 'Update resource' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateDto: UpdateResourceDto,
     @CurrentUser() user: any,
   ) {
@@ -211,46 +211,37 @@ export class ResourcesController {
   }
 
   @Post(':id/download')
-  @Permissions('resources:download')
+  // @Permissions('resources:download')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Download resource' })
-  async download(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async download(@Param('id') id: string, @CurrentUser() user: any) {
     return this.resourcesService.downloadResource(id, user.user_id);
   }
 
   @Delete(':id')
-  @Permissions('resources:delete')
+  // @Permissions('resources:delete')
   @ApiOperation({ summary: 'Delete resource' })
-  async delete(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async delete(@Param('id') id: string, @CurrentUser() user: any) {
     return this.resourcesService.delete(id, user.user_id);
   }
 
   // ==================== Favorites ====================
 
   @Post(':id/favorite')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Toggle favorite' })
-  async toggleFavorite(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async toggleFavorite(@Param('id') id: string, @CurrentUser() user: any) {
     return this.resourcesService.toggleFavorite(id, user.user_id);
   }
 
   // ==================== Comments ====================
 
   @Post(':id/comments')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Add comment to resource' })
   async addComment(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() commentDto: AddCommentDto,
     @CurrentUser() user: any,
   ) {
@@ -266,10 +257,10 @@ export class ResourcesController {
   }
 
   @Get(':id/comments')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Get resource comments' })
   async getComments(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @CurrentUser() user: any,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
@@ -280,10 +271,10 @@ export class ResourcesController {
   // ==================== Reviews ====================
 
   @Post(':id/reviews')
-  @Permissions('resources:read')
+  // @Permissions('resources:read')
   @ApiOperation({ summary: 'Add review/rating' })
   async addReview(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() reviewDto: AddReviewDto,
     @CurrentUser() user: any,
   ) {

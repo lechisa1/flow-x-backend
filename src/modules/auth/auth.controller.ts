@@ -148,6 +148,6 @@ export class AuthController {
     @CurrentUser() user: any,
     @Param('sessionId') sessionId: string,
   ) {
-    return this.authService.revokeSession(+sessionId, user.user_id);
+    return this.authService.revokeSession(sessionId, user.user_id);
   }
 }

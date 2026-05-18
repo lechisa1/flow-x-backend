@@ -29,12 +29,12 @@ export class CreateOrgNodeDto {
   node_type: string;
 
   @ApiPropertyOptional({
-    example: 1,
+    example: 'uuid',
     description: 'Parent node ID (null for root)',
   })
   @IsOptional()
-  @IsInt()
-  parent_node_id?: number;
+  @IsString()
+  parent_node_id?: string;
 
   @ApiPropertyOptional({
     example: 0,

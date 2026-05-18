@@ -11,6 +11,8 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { NoticesService } from './notices.service';
 import { UploadedFiles, UseInterceptors } from '@nestjs/common';
@@ -67,38 +69,22 @@ export class NoticesController {
     schema: {
       type: 'object',
       properties: {
-        title: {
-          type: 'string',
-        },
-        content: {
-          type: 'string',
-        },
-        category_id: {
-          type: 'number',
-        },
+        title: { type: 'string' },
+        content: { type: 'string' },
+        category_id: { type: 'string', format: 'uuid' },
         notice_type: {
           type: 'string',
+          enum: ['general', 'announcement', 'alert', 'warning', 'event'],
         },
-        scheduled_publish_at: {
-          type: 'string',
-          format: 'date-time',
-        },
-        expires_at: {
-          type: 'string',
-          format: 'date-time',
-        },
-
+        scheduled_publish_at: { type: 'string', format: 'date-time' },
+        expires_at: { type: 'string', format: 'date-time' },
         targets: {
           type: 'string',
-          example: '[{"org_node_id":1,"role_id":2,"target_type":"org_node"}]',
+          example: '[{"org_node_id":"uuid","role_id":"uuid","target_type":"org_node"}]',
         },
-
         files: {
           type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
+          items: { type: 'string', format: 'binary' },
         },
       },
     },
@@ -110,16 +96,15 @@ export class NoticesController {
   ) {
     // Parse targets because multipart/form-data sends string
     if (createNoticeDto.targets) {
-      createNoticeDto.targets = JSON.parse(createNoticeDto.targets);
-    }
-
-    // Parse category_id as integer for multipart/form-data
-    if (createNoticeDto.category_id !== undefined) {
-      createNoticeDto.category_id = parseInt(createNoticeDto.category_id, 10);
+      try {
+        createNoticeDto.targets = JSON.parse(createNoticeDto.targets);
+      } catch (e) {
+        throw new BadRequestException('Invalid targets format');
+      }
     }
 
     // Save uploaded files and get their IDs
-    const fileIds: number[] = [];
+    const fileIds: string[] = [];
     if (files && files.length > 0) {
       for (const file of files) {
         const savedFile = await this.noticesService.saveFile(
@@ -191,7 +176,7 @@ export class NoticesController {
 
   //   @Permissions('notices:delete')
   @ApiOperation({ summary: 'Delete notice category' })
-  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+  async deleteCategory(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.noticesService.deleteCategory(id);
   }
 
@@ -199,7 +184,7 @@ export class NoticesController {
   //   @Permissions('notices:read')
   @ApiOperation({ summary: 'Get notice by ID' })
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
   ) {
     return this.noticesService.findOne(id, user.user_id);
@@ -209,7 +194,7 @@ export class NoticesController {
   //   @Permissions('notices:update')
   @ApiOperation({ summary: 'Update notice' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateNoticeDto: UpdateNoticeDto,
     @CurrentUser() user: any,
   ) {
@@ -229,7 +214,7 @@ export class NoticesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Publish notice' })
   async publish(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
   ) {
     const notice = await this.noticesService.publishNotice(id, user.user_id);
@@ -244,7 +229,7 @@ export class NoticesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archive notice' })
   async archive(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
   ) {
     const notice = await this.noticesService.archiveNotice(id, user.user_id);
@@ -258,7 +243,7 @@ export class NoticesController {
   //   @Permissions('notices:delete')
   @ApiOperation({ summary: 'Delete notice (soft delete)' })
   async delete(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
   ) {
     return this.noticesService.deleteNotice(id, user.user_id);

@@ -1,18 +1,18 @@
-import { IsInt, IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsOptional, IsUUID, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AssignUserDto {
-  @ApiProperty({ example: 10, description: 'User ID to assign' })
-  @IsInt()
-  user_id: number;
+  @ApiProperty({ example: 'uuid', description: 'User ID to assign' })
+  @IsUUID()
+  user_id: string;
 
-  @ApiProperty({ example: 3, description: 'Organization node ID' })
-  @IsInt()
-  org_node_id: number;
+  @ApiProperty({ example: 'uuid', description: 'Organization node ID' })
+  @IsUUID()
+  org_node_id: string;
 
-  @ApiProperty({ example: 5, description: 'Position ID' })
-  @IsInt()
-  position_id: number;
+  @ApiProperty({ example: 'uuid', description: 'Position ID' })
+  @IsUUID()
+  position_id: string;
 
   @ApiPropertyOptional({
     example: true,

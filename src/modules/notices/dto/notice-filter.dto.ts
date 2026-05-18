@@ -15,8 +15,8 @@ export class NoticeFilterDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsInt()
-  category_id?: number;
+  @IsString()
+  category_id?: string;
 
   @ApiPropertyOptional({
     enum: ['general', 'announcement', 'alert', 'warning', 'event'],

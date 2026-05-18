@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class FileInfoDto {
   @ApiProperty()
-  file_id: number;
+  file_id: string;
 
   @ApiProperty()
   file_name: string;
@@ -23,7 +23,7 @@ class FileInfoDto {
 
 class CategoryDto {
   @ApiProperty()
-  category_id: number;
+  category_id: string;
 
   @ApiProperty()
   category_name: string;
@@ -37,7 +37,7 @@ class CategoryDto {
 
 class TagDto {
   @ApiProperty()
-  tag_id: number;
+  tag_id: string;
 
   @ApiProperty()
   tag_name: string;
@@ -45,7 +45,7 @@ class TagDto {
 
 class UploaderDto {
   @ApiProperty()
-  user_id: number;
+  user_id: string;
 
   @ApiProperty()
   full_name: string;
@@ -59,7 +59,7 @@ class UploaderDto {
 
 class CommentDto {
   @ApiProperty()
-  comment_id: number;
+  comment_id: string;
 
   @ApiProperty()
   content: string;
@@ -81,7 +81,7 @@ class CommentDto {
 export class ResourceResponseDto {
   @Expose()
   @ApiProperty()
-  resource_id: number;
+  resource_id: string;
 
   @Expose()
   @ApiProperty()
@@ -103,7 +103,7 @@ export class ResourceResponseDto {
 
   @Expose()
   @ApiPropertyOptional()
-  org_node_id?: number | null;
+  org_node_id?: string | null;
 
   @Expose()
   @ApiPropertyOptional()

@@ -22,7 +22,7 @@ export class PrioritiesService {
 
   async create(
     createPriorityDto: CreatePriorityDto,
-    createdBy: number,
+    createdBy: string,
   ): Promise<PriorityResponseDto> {
     // Check if priority level already exists
     const existingPriority = await this.prisma.priority.findUnique({
@@ -99,10 +99,8 @@ export class PrioritiesService {
     const prioritiesWithStats = priorities.map((priority) => ({
       ...priority,
       task_count: priority.tasks.length,
-      active_tasks_count: priority.tasks.filter((t) => {
-        const status = t.status_id;
-        return status !== 3; // Assuming 3 is completed
-      }).length,
+      active_tasks_count: priority.tasks.filter((t) => t.completed_at === null)
+        .length,
       overdue_tasks_count: priority.tasks.filter(
         (t) =>
           t.due_date &&
@@ -123,7 +121,7 @@ export class PrioritiesService {
     };
   }
 
-  async findOne(priorityId: number): Promise<PriorityResponseDto> {
+  async findOne(priorityId: string): Promise<PriorityResponseDto> {
     const priority = await this.prisma.priority.findUnique({
       where: { priority_id: priorityId },
       include: {
@@ -147,7 +145,7 @@ export class PrioritiesService {
     const priorityWithStats = {
       ...priority,
       task_count: priority.tasks.length,
-      active_tasks_count: priority.tasks.filter((t) => t.status_id !== 3)
+      active_tasks_count: priority.tasks.filter((t) => t.completed_at === null)
         .length,
       overdue_tasks_count: priority.tasks.filter(
         (t) =>
@@ -185,9 +183,9 @@ export class PrioritiesService {
   }
 
   async update(
-    priorityId: number,
+    priorityId: string,
     updatePriorityDto: UpdatePriorityDto,
-    updatedBy: number,
+    updatedBy: string,
   ): Promise<PriorityResponseDto> {
     const priority = await this.findOne(priorityId);
 
@@ -248,7 +246,7 @@ export class PrioritiesService {
     const priorityWithStats = {
       ...updatedPriority,
       task_count: updatedPriority.tasks.length,
-      active_tasks_count: updatedPriority.tasks.filter((t) => t.status_id !== 3)
+      active_tasks_count: updatedPriority.tasks.filter((t) => t.completed_at === null)
         .length,
       overdue_tasks_count: updatedPriority.tasks.filter(
         (t) =>
@@ -265,8 +263,8 @@ export class PrioritiesService {
   }
 
   async delete(
-    priorityId: number,
-    deletedBy: number,
+    priorityId: string,
+    deletedBy: string,
   ): Promise<{ message: string }> {
     const priority = await this.findOne(priorityId);
 
@@ -306,7 +304,7 @@ export class PrioritiesService {
   }
 
   async reorderPriorities(
-    priorityIds: number[],
+    priorityIds: string[],
   ): Promise<PriorityResponseDto[]> {
     const updates = priorityIds.map(async (priorityId, index) => {
       const priority = await this.prisma.priority.update({
@@ -325,7 +323,7 @@ export class PrioritiesService {
 
   async bulkUpdate(
     bulkUpdateDto: BulkPriorityUpdateDto,
-    updatedBy: number,
+    updatedBy: string,
   ): Promise<PriorityResponseDto[]> {
     const updates = bulkUpdateDto.updates.map(async (update) => {
       const priority = await this.prisma.priority.update({
@@ -490,10 +488,10 @@ export class PrioritiesService {
   }
 
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {

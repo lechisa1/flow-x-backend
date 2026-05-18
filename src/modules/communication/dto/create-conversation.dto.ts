@@ -1,7 +1,7 @@
 import {
   IsString,
   IsOptional,
-  IsInt,
+  IsUUID,
   IsArray,
   ArrayNotEmpty,
   IsIn,
@@ -21,12 +21,12 @@ export class CreateConversationDto {
   title: string;
 
   @ApiPropertyOptional({
-    example: 5,
+    example: '123e4567-e89b-12d3-a456-426614174000',
     description: 'Organization node ID (for node-based conversations)',
   })
   @IsOptional()
-  @IsInt()
-  org_node_id?: number;
+  @IsUUID()
+  org_node_id?: string;
 
   @ApiProperty({
     enum: ['direct', 'group', 'node', 'project'],
@@ -37,11 +37,11 @@ export class CreateConversationDto {
   conversation_type: string;
 
   @ApiPropertyOptional({
-    type: [Number],
+    type: [String],
     description: 'Initial participants to add (excluding creator)',
   })
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  participant_ids?: number[];
+  @IsUUID('all', { each: true })
+  participant_ids?: string[];
 }

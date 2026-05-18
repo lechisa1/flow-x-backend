@@ -1,7 +1,6 @@
 import {
   IsString,
   IsOptional,
-  IsInt,
   IsDateString,
   IsArray,
   IsIn,
@@ -29,8 +28,8 @@ export class UpdateNoticeDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsInt()
-  category_id?: number;
+  @IsString()
+  category_id?: string;
 
   @ApiPropertyOptional({
     enum: ['general', 'announcement', 'alert', 'warning', 'event'],
@@ -57,9 +56,9 @@ export class UpdateNoticeDto {
   @Type(() => NoticeTargetItemDto)
   targets?: NoticeTargetItemDto[];
 
-  @ApiPropertyOptional({ type: [Number] })
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  attachment_ids?: number[];
+  @IsString({ each: true })
+  attachment_ids?: string[];
 }

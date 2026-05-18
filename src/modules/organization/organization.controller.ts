@@ -44,7 +44,7 @@ export class OrganizationController {
   // ==================== Organizational Nodes ====================
 
   @Post('nodes')
-  @Permissions('organization:create')
+  // @Permissions('organization:create')
   @ApiOperation({ summary: 'Create organizational node' })
   async createNode(
     @Body() createOrgNodeDto: CreateOrgNodeDto,
@@ -82,7 +82,7 @@ export class OrganizationController {
   }
 
   @Get('nodes/tree')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: 'Get organization tree' })
   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
   @ApiQuery({ name: 'maxDepth', required: false, type: Number })
@@ -97,19 +97,19 @@ export class OrganizationController {
   }
 
   @Get('nodes/:id')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: 'Get organization node by ID' })
-  async findNode(@Param('id', ParseIntPipe) id: number) {
+  async findNode(@Param('id') id: string) {
     return this.organizationService.findNode(id);
   }
 
   @Get('nodes/:id/users')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: 'Get users assigned to a node' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getNodeUsers(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
@@ -117,10 +117,10 @@ export class OrganizationController {
   }
 
   @Put('nodes/:id')
-  @Permissions('organization:update')
+  // @Permissions('organization:update')
   @ApiOperation({ summary: 'Update organization node' })
   async updateNode(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateOrgNodeDto: UpdateOrgNodeDto,
     @CurrentUser() user: any,
   ) {
@@ -136,10 +136,10 @@ export class OrganizationController {
   }
 
   @Post('nodes/:id/move')
-  @Permissions('organization:update')
+  // @Permissions('organization:update')
   @ApiOperation({ summary: 'Move organization node to different parent' })
   async moveNode(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() moveOrgNodeDto: MoveOrgNodeDto,
     @CurrentUser() user: any,
   ) {
@@ -155,19 +155,16 @@ export class OrganizationController {
   }
 
   @Delete('nodes/:id')
-  @Permissions('organization:delete')
+  // @Permissions('organization:delete')
   @ApiOperation({ summary: 'Delete organization node' })
-  async deleteNode(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async deleteNode(@Param('id') id: string, @CurrentUser() user: any) {
     return this.organizationService.deleteNode(id, user.user_id);
   }
 
   // ==================== Positions ====================
 
   @Post('positions')
-  @Permissions('organization:create')
+  // @Permissions('organization:create')
   @ApiOperation({ summary: 'Create position' })
   async createPosition(
     @Body() createPositionDto: CreatePositionDto,
@@ -184,7 +181,7 @@ export class OrganizationController {
   }
 
   @Get('positions')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: 'Get all positions' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -202,10 +199,10 @@ export class OrganizationController {
   }
 
   @Put('positions/:id')
-  @Permissions('organization:update')
+  // @Permissions('organization:update')
   @ApiOperation({ summary: 'Update position' })
   async updatePosition(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updatePositionDto: UpdatePositionDto,
     @CurrentUser() user: any,
   ) {
@@ -221,19 +218,16 @@ export class OrganizationController {
   }
 
   @Delete('positions/:id')
-  @Permissions('organization:delete')
+  // @Permissions('organization:delete')
   @ApiOperation({ summary: 'Delete position' })
-  async deletePosition(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async deletePosition(@Param('id') id: string, @CurrentUser() user: any) {
     return this.organizationService.deletePosition(id, user.user_id);
   }
 
   // ==================== User Assignments ====================
 
   @Post('assignments')
-  @Permissions('organization:assign')
+  // @Permissions('organization:assign')
   @ApiOperation({ summary: 'Assign user to node' })
   async assignUserToNode(
     @Body() assignUserDto: AssignUserDto,
@@ -250,10 +244,10 @@ export class OrganizationController {
   }
 
   @Put('assignments/:id')
-  @Permissions('organization:update')
+  // @Permissions('organization:update')
   @ApiOperation({ summary: 'Update user assignment' })
   async updateUserAssignment(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateData: Partial<AssignUserDto>,
     @CurrentUser() user: any,
   ) {
@@ -269,35 +263,32 @@ export class OrganizationController {
   }
 
   @Delete('assignments/:id')
-  @Permissions('organization:assign')
+  // @Permissions('organization:assign')
   @ApiOperation({ summary: 'Remove user from node' })
-  async removeUserFromNode(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: any,
-  ) {
+  async removeUserFromNode(@Param('id') id: string, @CurrentUser() user: any) {
     return this.organizationService.removeUserFromNode(id, user.user_id);
   }
 
   // ==================== User Nodes ====================
 
   @Get('my-nodes')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: "Get current user's organization nodes" })
   async getMyNodes(@CurrentUser() user: any) {
     return this.organizationService.getUserNodes(user.user_id);
   }
 
   @Get('users/:userId/nodes')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: "Get user's organization nodes" })
-  async getUserNodes(@Param('userId', ParseIntPipe) userId: number) {
+  async getUserNodes(@Param('userId') userId: string) {
     return this.organizationService.getUserNodes(userId);
   }
 
   // ==================== Statistics ====================
 
   @Get('stats')
-  @Permissions('organization:read')
+  // @Permissions('organization:read')
   @ApiOperation({ summary: 'Get organization statistics' })
   async getStatistics() {
     return this.organizationService.getStatistics();

@@ -6,7 +6,7 @@ import { Participant, LastMessage } from '../interfaces/chat.interface';
 export class ParticipantDto implements Participant {
   @Expose()
   @ApiProperty()
-  user_id: number;
+  user_id: string;
 
   @Expose()
   @ApiProperty()
@@ -33,7 +33,7 @@ export class ParticipantDto implements Participant {
 export class LastMessageDto implements LastMessage {
   @Expose()
   @ApiProperty()
-  message_id: number;
+  message_id: string;
 
   @Expose()
   @ApiProperty()
@@ -49,7 +49,7 @@ export class LastMessageDto implements LastMessage {
 
   @Expose()
   @ApiProperty()
-  sender_id: number;
+  sender_id: string;
 
   @Expose()
   @ApiProperty()
@@ -72,7 +72,7 @@ export class ConversationResponseDto {
 
   @Expose()
   @ApiPropertyOptional()
-  org_node_id?: number;
+  org_node_id?: string;
 
   @Expose()
   @ApiPropertyOptional()
@@ -114,7 +114,7 @@ export class ConversationResponseDto {
 
   @Expose()
   @ApiPropertyOptional()
-  initiator_user_id?: number;
+  initiator_user_id?: string;
 
   @Expose()
   @ApiPropertyOptional()

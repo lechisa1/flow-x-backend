@@ -2,10 +2,10 @@ import { Transform } from 'class-transformer';
 import {
   IsString,
   IsOptional,
-  IsInt,
   IsArray,
   IsBoolean,
   MaxLength,
+  IsUUID,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -23,14 +23,14 @@ export class UpdateResourceDto {
   description?: string;
 
   @ApiPropertyOptional({
-    example: 15,
-    description: 'New file ID for new version',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'New file ID for new version (UUID)',
   })
   @IsOptional()
-  @IsInt()
-  file_id?: number;
+  @IsUUID()
+  file_id?: string;
 
-  @ApiPropertyOptional({ type: [Number] })
+  @ApiPropertyOptional({ type: [String] })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       try {
@@ -43,8 +43,8 @@ export class UpdateResourceDto {
   })
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  category_ids?: number[];
+  @IsUUID('all', { each: true })
+  category_ids?: string[];
 
   @ApiPropertyOptional({ type: [String] })
   @Transform(({ value }) => {

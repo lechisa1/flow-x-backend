@@ -5,27 +5,27 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 // =====================================================
 
 export interface MessageWithDetails {
-  message_id: number;
+  message_id: string;
   content_text: string;
-  sender_user_id: number;
+  sender_user_id: string;
   sender_name: string;
   sender_email: string;
   sender_profile_pic?: string;
   sent_at: Date;
   is_edited: boolean;
-  parent_message_id?: number;
+  parent_message_id?: string;
   reactions: {
     type: string;
-    user_id: number;
+    user_id: string;
     user_name: string;
   }[];
   read_by: {
-    user_id: number;
+    user_id: string;
     user_name: string;
     read_at: Date;
   }[];
   attachments: {
-    file_id: number;
+    file_id: string;
     file_name: string;
     file_url: string;
   }[];
@@ -36,13 +36,13 @@ export interface MessageWithDetails {
 // =====================================================
 
 export interface MessageReaction {
-  reaction_id: number;
-  message_id: number;
-  user_id: number;
+  reaction_id: string;
+  message_id: string;
+  user_id: string;
   reaction_type: string;
   reacted_at: Date;
   user?: {
-    user_id: number;
+    user_id: string;
     full_name: string;
   };
 }
@@ -52,7 +52,7 @@ export interface MessageReaction {
 // =====================================================
 
 export interface Participant {
-  user_id: number;
+  user_id: string;
   full_name: string;
   email: string;
   profile_pic_url?: string;
@@ -72,7 +72,7 @@ export interface ParticipantWithDetails extends Participant {
 
 export class LastMessage {
   @ApiProperty()
-  message_id: number;
+  message_id: string;
 
   @ApiProperty()
   content_text: string;
@@ -84,7 +84,7 @@ export class LastMessage {
   sender_name: string;
 
   @ApiProperty()
-  sender_id: number;
+  sender_id: string;
 
   @ApiProperty()
   is_read: boolean;
@@ -96,7 +96,7 @@ export class LastMessage {
 
 export class ConversationResponseDto {
   @ApiProperty()
-  conversation_id: number;
+  conversation_id: string;
 
   @ApiProperty()
   title: string;
@@ -105,7 +105,7 @@ export class ConversationResponseDto {
   conversation_type: string;
 
   @ApiPropertyOptional()
-  org_node_id?: number;
+  org_node_id?: string;
 
   @ApiPropertyOptional()
   org_node_name?: string;
@@ -135,7 +135,7 @@ export class ConversationResponseDto {
   is_pinned?: boolean;
 
   @ApiPropertyOptional()
-  initiator_user_id?: number;
+  initiator_user_id?: string;
 
   @ApiPropertyOptional()
   initiator_name?: string;
@@ -146,15 +146,15 @@ export class ConversationResponseDto {
 // =====================================================
 
 export interface ChatRequestWithDetails {
-  request_id: number;
+  request_id: string;
   from_user: {
-    user_id: number;
+    user_id: string;
     full_name: string;
     email: string;
     profile_pic_url?: string;
   };
   to_user: {
-    user_id: number;
+    user_id: string;
     full_name: string;
     email: string;
     profile_pic_url?: string;
@@ -163,16 +163,16 @@ export interface ChatRequestWithDetails {
   message?: string;
   requested_at: Date;
   responded_at?: Date;
-  conversation_id?: number;
+  conversation_id?: string;
 }
 
 export interface ChatRequestResponse {
-  request_id: number;
-  from_user_id: number;
+  request_id: string;
+  from_user_id: string;
   from_user_name: string;
   from_user_email: string;
   from_user_profile_pic?: string;
-  to_user_id: number;
+  to_user_id: string;
   to_user_name: string;
   to_user_email: string;
   status: string;
@@ -186,9 +186,9 @@ export interface ChatRequestResponse {
 // =====================================================
 
 export interface BlockedUser {
-  block_id: number;
-  blocker_id: number;
-  blocked_id: number;
+  block_id: string;
+  blocker_id: string;
+  blocked_id: string;
   blocked_user_name: string;
   blocked_user_email: string;
   reason?: string;
@@ -196,7 +196,7 @@ export interface BlockedUser {
 }
 
 export interface BlockedUserResponse {
-  user_id: number;
+  user_id: string;
   full_name: string;
   email: string;
   profile_pic_url?: string;
@@ -217,24 +217,24 @@ export interface WebSocketMessage {
     | 'participant_joined'
     | 'participant_left'
     | 'message_deleted';
-  conversation_id: number;
-  user_id: number;
+  conversation_id: string;
+  user_id: string;
   user_name: string;
   data: any;
   timestamp: Date;
 }
 
 export interface TypingIndicator {
-  conversation_id: number;
-  user_id: number;
+  conversation_id: string;
+  user_id: string;
   user_name: string;
   is_typing: boolean;
 }
 
 export interface ReadReceipt {
-  conversation_id: number;
-  message_id: number;
-  user_id: number;
+  conversation_id: string;
+  message_id: string;
+  user_id: string;
   user_name: string;
   read_at: Date;
 }
@@ -288,12 +288,12 @@ export interface ConversationStatistics {
 // =====================================================
 
 export interface UserChatStatus {
-  user_id: number;
+  user_id: string;
   full_name: string;
   is_online: boolean;
   last_seen?: Date;
-  current_conversation_id?: number;
-  typing_in_conversation?: number;
+  current_conversation_id?: string;
+  typing_in_conversation?: string;
 }
 
 // =====================================================
@@ -301,7 +301,7 @@ export interface UserChatStatus {
 // =====================================================
 
 export interface ConversationSearchResult {
-  conversation_id: number;
+  conversation_id: string;
   title: string;
   conversation_type: string;
   match_count: number;
@@ -314,9 +314,9 @@ export interface ConversationSearchResult {
 // =====================================================
 
 export interface MessageSearchResult {
-  message_id: number;
+  message_id: string;
   content_text: string;
-  conversation_id: number;
+  conversation_id: string;
   conversation_title: string;
   sender_name: string;
   sent_at: Date;
@@ -328,7 +328,7 @@ export interface MessageSearchResult {
 // =====================================================
 
 export interface BulkMessageAction {
-  message_ids: number[];
+  message_ids: string[];
   action: 'delete' | 'mark_read' | 'mark_unread';
 }
 
@@ -336,7 +336,7 @@ export interface BulkMessageActionResult {
   success_count: number;
   failed_count: number;
   results: {
-    message_id: number;
+    message_id: string;
     status: 'success' | 'failed';
     error?: string;
   }[];
@@ -347,7 +347,7 @@ export interface BulkMessageActionResult {
 // =====================================================
 
 export interface ConversationSettings {
-  conversation_id: number;
+  conversation_id: string;
   allow_typing_indicators: boolean;
   allow_read_receipts: boolean;
   allow_reactions: boolean;
@@ -363,9 +363,9 @@ export interface ConversationSettings {
 // =====================================================
 
 export interface DirectMessageInitiation {
-  user_id: number;
-  existing_conversation_id?: number;
-  new_conversation_id?: number;
+  user_id: string;
+  existing_conversation_id?: string;
+  new_conversation_id?: string;
   requires_approval: boolean;
-  request_id?: number;
+  request_id?: string;
 }

@@ -2,13 +2,12 @@ import { Transform } from 'class-transformer';
 import {
   IsString,
   IsOptional,
-  IsInt,
+  IsUUID,
   IsArray,
   MinLength,
   MaxLength,
   IsBoolean,
 } from 'class-validator';
-
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateResourceDto {
@@ -30,40 +29,42 @@ export class CreateResourceDto {
   description?: string;
 
   @ApiPropertyOptional({
-    example: 10,
-    description: 'Existing file ID (optional if uploading new file)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Existing file ID (UUID)',
   })
   @IsOptional()
-  @IsInt()
-  file_id?: number;
+  @IsUUID()
+  file_id?: string;
 
   @ApiPropertyOptional({
-    example: 5,
-    description: 'Organization node ID',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+    description: 'Organization node ID (UUID)',
   })
   @IsOptional()
-  @IsInt()
-  org_node_id?: number;
+  @IsUUID()
+  org_node_id?: string;
 
   @ApiPropertyOptional({
-    type: [Number],
-    description: 'Category IDs',
-    example: [1, 2, 3],
+    type: [String],
+    description: 'Category IDs (UUIDs)',
+    example: [
+      '123e4567-e89b-12d3-a456-426614174002',
+      '123e4567-e89b-12d3-a456-426614174003',
+    ],
   })
   @Transform(({ value }) => {
     if (Array.isArray(value)) {
-      return value.map((v) => Number(v));
+      return value.map((v) => String(v));
     }
 
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
-
         if (Array.isArray(parsed)) {
-          return parsed.map((v) => Number(v));
+          return parsed.map((v) => String(v));
         }
       } catch {
-        return value.split(',').map((v) => Number(v.trim()));
+        return value.split(',').map((v) => v.trim());
       }
     }
 
@@ -71,8 +72,8 @@ export class CreateResourceDto {
   })
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  category_ids?: number[];
+  @IsUUID('all', { each: true })
+  category_ids?: string[];
 
   @ApiPropertyOptional({
     type: [String],
@@ -87,7 +88,6 @@ export class CreateResourceDto {
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
-
         if (Array.isArray(parsed)) {
           return parsed.map((v) => String(v));
         }

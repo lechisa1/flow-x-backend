@@ -243,7 +243,7 @@ export class AuthService {
     };
   }
 
-  private async getUserWithRolesAndPermissions(userId: number) {
+  private async getUserWithRolesAndPermissions(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { user_id: userId },
       include: {
@@ -304,7 +304,7 @@ export class AuthService {
     };
   }
 
-  async logout(userId: number, token: string): Promise<void> {
+  async logout(userId: string, token: string): Promise<void> {
     await this.prisma.userSession.deleteMany({
       where: {
         user_id: userId,
@@ -323,7 +323,7 @@ export class AuthService {
     await this.logAuditTrail(userId, 'LOGOUT', 'users', userId, null, {});
   }
 
-  async logoutAll(userId: number): Promise<void> {
+  async logoutAll(userId: string): Promise<void> {
     await this.prisma.userSession.deleteMany({
       where: { user_id: userId },
     });
@@ -381,7 +381,7 @@ export class AuthService {
   }
 
   async changePassword(
-    userId: number,
+    userId: string,
     changePasswordDto: ChangePasswordDto,
   ): Promise<void> {
     const user = await this.prisma.user.findUnique({
@@ -579,7 +579,7 @@ export class AuthService {
     }
   }
 
-  private generateTokens(userId: number, email: string): any {
+  private generateTokens(userId: string, email: string): any {
     const payload: JwtPayload = { sub: userId, email };
 
     const access_token = this.jwtService.sign(payload, {
@@ -599,10 +599,10 @@ export class AuthService {
   }
 
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {
@@ -619,7 +619,7 @@ export class AuthService {
   }
 
   // Get all active sessions for a user
-  async getUserSessions(userId: number) {
+  async getUserSessions(userId: string) {
     return this.prisma.userSession.findMany({
       where: {
         user_id: userId,
@@ -630,7 +630,7 @@ export class AuthService {
   }
 
   // Revoke specific session
-  async revokeSession(sessionId: number, userId: number) {
+  async revokeSession(sessionId: string, userId: string) {
     const session = await this.prisma.userSession.findFirst({
       where: {
         session_id: sessionId,
@@ -649,7 +649,7 @@ export class AuthService {
 
   // Validate password is not in recent history
   private async validatePasswordNotInHistory(
-    userId: number,
+    userId: string,
     newPassword: string,
   ): Promise<void> {
     const historyCount =
@@ -673,7 +673,7 @@ export class AuthService {
   }
 
   // Log password reset request for anomaly detection
-  private async logPasswordResetRequest(userId: number, ipAddress?: string) {
+  private async logPasswordResetRequest(userId: string, ipAddress?: string) {
     await this.prisma.auditLog.create({
       data: {
         user_id: userId,

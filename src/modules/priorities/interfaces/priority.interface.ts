@@ -1,5 +1,5 @@
 export interface PriorityWithStats {
-  priority_id: number;
+  priority_id: string;
   priority_level: string;
   color_code?: string;
   response_time_hrs?: number;
@@ -32,7 +32,7 @@ export interface PriorityAnalytics {
 
 export interface BulkPriorityUpdateDto {
   updates: {
-    priority_id: number;
+    priority_id: string;
     sort_order?: number;
     response_time_hrs?: number;
     is_active?: boolean;

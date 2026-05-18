@@ -30,7 +30,7 @@ export class OrganizationService {
 
   async createNode(
     createOrgNodeDto: CreateOrgNodeDto,
-    createdBy: number,
+    createdBy: string,
   ): Promise<OrgNodeResponseDto> {
     // Check if node with same name exists at same level
     const existingNode = await this.prisma.organizationalStructure.findFirst({
@@ -183,7 +183,7 @@ export class OrganizationService {
   }
 
   private async buildTree(
-    nodeId: number,
+    nodeId: string,
     options?: OrgTreeOptions,
     currentDepth: number = 0,
   ): Promise<OrgNodeWithChildren> {
@@ -230,7 +230,7 @@ export class OrganizationService {
     };
   }
 
-  async findNode(nodeId: number): Promise<OrgNodeResponseDto> {
+  async findNode(nodeId: string): Promise<OrgNodeResponseDto> {
     const node = await this.prisma.organizationalStructure.findUnique({
       where: { org_node_id: nodeId },
       include: {
@@ -267,9 +267,9 @@ export class OrganizationService {
   }
 
   async updateNode(
-    nodeId: number,
+    nodeId: string,
     updateOrgNodeDto: UpdateOrgNodeDto,
-    updatedBy: number,
+    updatedBy: string,
   ): Promise<OrgNodeResponseDto> {
     await this.findNode(nodeId);
 
@@ -341,9 +341,9 @@ export class OrganizationService {
   }
 
   async moveNode(
-    nodeId: number,
+    nodeId: string,
     moveOrgNodeDto: MoveOrgNodeDto,
-    movedBy: number,
+    movedBy: string,
   ): Promise<OrgNodeResponseDto> {
     const node = await this.findNode(nodeId);
 
@@ -411,10 +411,10 @@ export class OrganizationService {
   }
 
   private async checkCircularReference(
-    nodeId: number,
-    targetParentId: number,
+    nodeId: string,
+    targetParentId: string,
   ): Promise<boolean> {
-    let currentId: number | null = targetParentId;
+    let currentId: string | null = targetParentId;
     while (currentId) {
       if (currentId === nodeId) {
         return true;
@@ -428,7 +428,7 @@ export class OrganizationService {
     return false;
   }
 
-  private async updateDescendantLevels(nodeId: number, newLevel: number) {
+  private async updateDescendantLevels(nodeId: string, newLevel: number) {
     const children = await this.prisma.organizationalStructure.findMany({
       where: { parent_node_id: nodeId },
     });
@@ -443,8 +443,8 @@ export class OrganizationService {
   }
 
   async deleteNode(
-    nodeId: number,
-    deletedBy: number,
+    nodeId: string,
+    deletedBy: string,
   ): Promise<{ message: string }> {
     const node = await this.findNode(nodeId);
 
@@ -492,7 +492,7 @@ export class OrganizationService {
 
   async createPosition(
     createPositionDto: CreatePositionDto,
-    createdBy: number,
+    createdBy: string,
   ) {
     const existingPosition = await this.prisma.organizationPosition.findUnique({
       where: { position_name: createPositionDto.position_name },
@@ -563,9 +563,9 @@ export class OrganizationService {
   }
 
   async updatePosition(
-    positionId: number,
+    positionId: string,
     updatePositionDto: UpdatePositionDto,
-    updatedBy: number,
+    updatedBy: string,
   ) {
     const position = await this.prisma.organizationPosition.findUnique({
       where: { position_id: positionId },
@@ -607,7 +607,7 @@ export class OrganizationService {
     return updatedPosition;
   }
 
-  async deletePosition(positionId: number, deletedBy: number) {
+  async deletePosition(positionId: string, deletedBy: string) {
     const position = await this.prisma.organizationPosition.findUnique({
       where: { position_id: positionId },
     });
@@ -647,7 +647,7 @@ export class OrganizationService {
 
   // ==================== User Assignments ====================
 
-  async assignUserToNode(assignUserDto: AssignUserDto, assignedBy: number) {
+  async assignUserToNode(assignUserDto: AssignUserDto, assignedBy: string) {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { user_id: assignUserDto.user_id, deleted_at: null },
@@ -744,9 +744,9 @@ export class OrganizationService {
   }
 
   async updateUserAssignment(
-    assignmentId: number,
+    assignmentId: string,
     updateData: Partial<AssignUserDto>,
-    updatedBy: number,
+    updatedBy: string,
   ) {
     const assignment = await this.prisma.userAssignment.findUnique({
       where: { assignment_id: assignmentId },
@@ -805,7 +805,7 @@ export class OrganizationService {
     return updatedAssignment;
   }
 
-  async removeUserFromNode(assignmentId: number, removedBy: number) {
+  async removeUserFromNode(assignmentId: string, removedBy: string) {
     const assignment = await this.prisma.userAssignment.findUnique({
       where: { assignment_id: assignmentId },
     });
@@ -832,7 +832,7 @@ export class OrganizationService {
     return { message: 'User removed from node successfully' };
   }
 
-  async getNodeUsers(nodeId: number, page: number = 1, limit: number = 10) {
+  async getNodeUsers(nodeId: string, page: number = 1, limit: number = 10) {
     await this.findNode(nodeId);
 
     const skip = (page - 1) * limit;
@@ -877,7 +877,7 @@ export class OrganizationService {
     };
   }
 
-  async getUserNodes(userId: number) {
+  async getUserNodes(userId: string) {
     const assignments = await this.prisma.userAssignment.findMany({
       where: { user_id: userId },
       include: {
@@ -897,10 +897,10 @@ export class OrganizationService {
   // ==================== Helper Methods ====================
 
   private async logAuditTrail(
-    userId: number,
+    userId: string,
     action: string,
     tableAffected: string,
-    recordId: number,
+    recordId: string,
     oldValues: any,
     newValues: any,
   ) {

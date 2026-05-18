@@ -3,13 +3,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class TargetDto {
   @ApiProperty()
-  target_id: number;
+  target_id: string;
 
   @ApiPropertyOptional()
-  org_node_id?: number | null;
+  org_node_id?: string | null;
 
   @ApiPropertyOptional()
-  role_id?: number | null;
+  role_id?: string | null;
 
   @ApiProperty()
   target_type: string;
@@ -23,7 +23,7 @@ class TargetDto {
 
 class PublisherDto {
   @ApiProperty()
-  user_id: number;
+  user_id: string;
 
   @ApiProperty()
   full_name: string;
@@ -37,7 +37,7 @@ class PublisherDto {
 
 class CategoryDto {
   @ApiProperty()
-  category_id: number;
+  category_id: string;
 
   @ApiProperty()
   category_name: string;
@@ -45,7 +45,7 @@ class CategoryDto {
 
 class AttachmentDto {
   @ApiProperty()
-  file_id: number;
+  file_id: string;
 
   @ApiProperty()
   file_name: string;
@@ -53,7 +53,7 @@ class AttachmentDto {
   @ApiProperty()
   file_url: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   mime_type?: string;
 }
 
@@ -61,7 +61,7 @@ class AttachmentDto {
 export class NoticeResponseDto {
   @Expose()
   @ApiProperty()
-  notice_id: number;
+  notice_id: string;
 
   @Expose()
   @ApiProperty()
@@ -73,7 +73,7 @@ export class NoticeResponseDto {
 
   @Expose()
   @ApiPropertyOptional()
-  category_id?: number;
+  category_id?: string;
 
   @Expose()
   @ApiPropertyOptional()
@@ -171,10 +171,12 @@ export class NoticeResponseDto {
   @ApiPropertyOptional()
   get days_until_expiry(): number | null {
     if (!this.expires_at) return null;
+
     const days = Math.ceil(
       (new Date(this.expires_at).getTime() - new Date().getTime()) /
         (1000 * 60 * 60 * 24),
     );
+
     return days > 0 ? days : 0;
   }
 

@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class UserBriefDto {
   @ApiProperty()
-  user_id: number;
+  user_id: string;
 
   @ApiProperty()
   full_name: string;
@@ -14,7 +14,7 @@ class UserBriefDto {
 
 class PositionBriefDto {
   @ApiProperty()
-  position_id: number;
+  position_id: string;
 
   @ApiProperty()
   position_name: string;
@@ -22,7 +22,7 @@ class PositionBriefDto {
 
 class UserAssignmentDto {
   @ApiProperty()
-  assignment_id: number;
+  assignment_id: string;
 
   @ApiProperty()
   is_primary: boolean;
@@ -44,7 +44,7 @@ class UserAssignmentDto {
 export class OrgNodeResponseDto {
   @Expose()
   @ApiProperty()
-  org_node_id: number;
+  org_node_id: string;
 
   @Expose()
   @ApiProperty()
@@ -56,7 +56,7 @@ export class OrgNodeResponseDto {
 
   @Expose()
   @ApiPropertyOptional({ nullable: true })
-  parent_node_id?: number | null;
+  parent_node_id?: string | null;
 
   @Expose()
   @ApiProperty()

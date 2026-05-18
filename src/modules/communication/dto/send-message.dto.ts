@@ -1,10 +1,12 @@
 import {
   IsString,
   IsOptional,
-  IsInt,
+  IsUUID,
+  IsArray,
   MinLength,
   MaxLength,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendMessageDto {
@@ -15,18 +17,20 @@ export class SendMessageDto {
   content: string;
 
   @ApiPropertyOptional({
-    example: 10,
+    example: '123e4567-e89b-12d3-a456-426614174000',
     description: 'Parent message ID - use this to reply to a specific message',
   })
   @IsOptional()
-  @IsInt()
-  parent_message_id?: number;
+  @IsUUID()
+  @Transform(({ value }) => (value === '' ? undefined : value), { toClassOnly: true })
+  parent_message_id?: string;
 
   @ApiPropertyOptional({
-    type: [Number],
+    type: [String],
     description: 'Attachment file IDs',
   })
   @IsOptional()
-  @IsInt({ each: true })
-  attachment_ids?: number[];
+  @IsArray()
+  @IsUUID('all', { each: true })
+  attachment_ids?: string[];
 }

@@ -1,14 +1,14 @@
-import { IsInt, IsOptional } from 'class-validator';
+import { IsString, IsInt, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class MoveOrgNodeDto {
   @ApiProperty({
-    example: 5,
+    example: 'uuid',
     description: 'New parent node ID (null to make root)',
   })
   @IsOptional()
-  @IsInt()
-  new_parent_id?: number;
+  @IsString()
+  new_parent_id?: string;
 
   @ApiPropertyOptional({
     example: 2,

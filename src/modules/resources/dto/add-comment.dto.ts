@@ -1,10 +1,14 @@
 import {
   IsString,
   IsOptional,
+  IsUUID,
   IsInt,
+  Min,
+  Max,
   MinLength,
   MaxLength,
 } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AddCommentDto {
@@ -14,15 +18,21 @@ export class AddCommentDto {
   @MaxLength(1000)
   content: string;
 
-  @ApiPropertyOptional({ description: 'Parent comment ID for replies' })
+  @ApiPropertyOptional({
+    description: 'Parent comment ID for replies (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @IsOptional()
-  @IsInt()
-  parent_id?: number;
+  @IsUUID()
+  parent_id?: string;
 }
 
 export class AddReviewDto {
   @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
+  @Type(() => Number)
   @IsInt()
+  @Min(1)
+  @Max(5)
   rating: number;
 
   @ApiPropertyOptional({ example: 'Excellent resource!' })

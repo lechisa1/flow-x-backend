@@ -60,7 +60,7 @@ export class UsersService {
     };
   }
 
-  async findOne(userId: number) {
+  async findOne(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { user_id: userId, deleted_at: null },
       include: {
@@ -121,8 +121,8 @@ export class UsersService {
       await this.prisma.userRole.createMany({
         data: createUserDto.role_ids.map((roleId) => ({
           user_id: user.user_id,
-          role_id: roleId,
-          assigned_by: createUserDto.assigned_by,
+          role_id: roleId as string,
+          assigned_by: createUserDto.assigned_by as string | undefined,
         })),
       });
     }
@@ -130,7 +130,7 @@ export class UsersService {
     return this.findOne(user.user_id);
   }
 
-  async update(userId: number, updateUserDto: UpdateUserDto) {
+  async update(userId: string, updateUserDto: UpdateUserDto) {
     const user = await this.findOne(userId);
 
     const updateData: any = {
@@ -161,8 +161,8 @@ export class UsersService {
       await this.prisma.userRole.createMany({
         data: updateUserDto.role_ids.map((roleId) => ({
           user_id: userId,
-          role_id: roleId,
-          assigned_by: updateUserDto.assigned_by,
+          role_id: roleId as string,
+          assigned_by: updateUserDto.assigned_by as string | undefined,
         })),
       });
     }
@@ -170,7 +170,7 @@ export class UsersService {
     return this.findOne(userId);
   }
 
-  async delete(userId: number, deletedBy: number) {
+  async delete(userId: string, deletedBy: string) {
     const user = await this.findOne(userId);
 
     await this.prisma.user.update({
@@ -196,7 +196,7 @@ export class UsersService {
     return { message: 'User deleted successfully' };
   }
 
-  async assignRole(userId: number, roleId: number, assignedBy: number) {
+  async assignRole(userId: string, roleId: string, assignedBy: string) {
     const existing = await this.prisma.userRole.findUnique({
       where: {
         user_id_role_id: {
@@ -219,7 +219,7 @@ export class UsersService {
     });
   }
 
-  async removeRole(userId: number, roleId: number) {
+  async removeRole(userId: string, roleId: string) {
     return this.prisma.userRole.delete({
       where: {
         user_id_role_id: {

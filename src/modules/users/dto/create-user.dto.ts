@@ -8,8 +8,6 @@ import {
   IsBoolean,
   IsArray,
   ArrayUnique,
-  IsInt,
-  IsPhoneNumber,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -30,7 +28,7 @@ export class CreateUserDto {
 
   @ApiProperty({ example: '+251911234567', description: 'Phone number' })
   @IsOptional()
-  @IsPhoneNumber()
+  @IsString()
   phone?: string;
 
   @ApiProperty({ example: 'StrongP@ssw0rd123', description: 'Password' })
@@ -49,17 +47,20 @@ export class CreateUserDto {
   is_active?: boolean;
 
   @ApiPropertyOptional({
-    example: [1, 2, 3],
-    description: 'Role IDs to assign',
+    type: [String],
+    description: 'Role IDs to assign (UUIDs)',
+    example: [
+      '123e4567-e89b-12d3-a456-426614174000',
+      '123e4567-e89b-12d3-a456-426614174001',
+    ],
   })
   @IsOptional()
   @IsArray()
   @ArrayUnique()
-  @IsInt({ each: true })
-  role_ids?: number[];
+  role_ids?: string[];
 
   @ApiPropertyOptional({ description: 'Set by controller from current user' })
   @IsOptional()
-  @IsInt()
-  assigned_by?: number;
+  @IsString()
+  assigned_by?: string;
 }
